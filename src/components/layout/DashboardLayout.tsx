@@ -1,12 +1,15 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Zap } from "lucide-react";
-
+import { Zap, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -19,6 +22,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="font-medium">AI FinOps Cockpit</span>
               <span className="text-border">·</span>
               <span>April 2026</span>
+            </div>
+            <div className="ml-auto">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-5">
