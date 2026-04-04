@@ -8,9 +8,7 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
       colors: {
@@ -61,15 +59,24 @@ export default {
           healthy: "hsl(var(--status-healthy))",
           "healthy-foreground": "hsl(var(--status-healthy-foreground))",
           "healthy-muted": "hsl(var(--status-healthy-muted))",
+          "healthy-subtle": "hsl(var(--status-healthy-subtle))",
           warning: "hsl(var(--status-warning))",
           "warning-foreground": "hsl(var(--status-warning-foreground))",
           "warning-muted": "hsl(var(--status-warning-muted))",
+          "warning-subtle": "hsl(var(--status-warning-subtle))",
           critical: "hsl(var(--status-critical))",
           "critical-foreground": "hsl(var(--status-critical-foreground))",
           "critical-muted": "hsl(var(--status-critical-muted))",
+          "critical-subtle": "hsl(var(--status-critical-subtle))",
           info: "hsl(var(--status-info))",
           "info-foreground": "hsl(var(--status-info-foreground))",
           "info-muted": "hsl(var(--status-info-muted))",
+          "info-subtle": "hsl(var(--status-info-subtle))",
+        },
+        spend: {
+          plan: "hsl(var(--spend-plan))",
+          prepaid: "hsl(var(--spend-prepaid))",
+          overage: "hsl(var(--spend-overage))",
         },
       },
       borderRadius: {
