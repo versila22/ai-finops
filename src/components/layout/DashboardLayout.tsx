@@ -1,7 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Zap } from "lucide-react";
-
+import { Zap, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
