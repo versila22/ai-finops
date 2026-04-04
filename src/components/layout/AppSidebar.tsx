@@ -7,7 +7,6 @@ import {
   Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -21,18 +20,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { activeAlertCount } from "@/data/mockData";
-
-const navItems = [
-  { title: "Cockpit", url: "/", icon: LayoutDashboard },
-  { title: "Providers", url: "/providers", icon: Server },
-  { title: "Alerts", url: "/alerts", icon: Bell, badge: activeAlertCount },
-  { title: "Plans", url: "/plans", icon: CreditCard },
-  { title: "Adjustments", url: "/adjustments", icon: SlidersHorizontal },
-];
+import { useI18n } from "@/i18n";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { t } = useI18n();
+
+  const navItems = [
+    { title: t.navCockpit, url: "/", icon: LayoutDashboard },
+    { title: t.navProviders, url: "/providers", icon: Server },
+    { title: t.navAlerts, url: "/alerts", icon: Bell, badge: activeAlertCount },
+    { title: t.navPlans, url: "/plans", icon: CreditCard },
+    { title: t.navAdjustments, url: "/adjustments", icon: SlidersHorizontal },
+  ];
 
   return (
     <Sidebar collapsible="icon">
@@ -43,8 +44,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div>
-              <p className="text-sm font-bold tracking-tight leading-none">AI FinOps</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Spend Cockpit</p>
+              <p className="text-sm font-bold tracking-tight leading-none">{t.appName}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{t.appTagline}</p>
             </div>
           )}
         </div>
@@ -54,7 +55,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -84,8 +85,8 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Cycle</p>
-            <p className="text-xs font-medium mt-0.5">Apr 1 — Apr 30, 2026</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t.cycle}</p>
+            <p className="text-xs font-medium mt-0.5">{t.cycleRange}</p>
           </div>
         )}
       </SidebarFooter>

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Circle, CheckCircle, AlertTriangle, XCircle, Pencil, RefreshCw, ArrowDown, ArrowUp, Eye, Info } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 type StatusType = "healthy" | "warning" | "critical" | "info" | "synced" | "pending" | "error" | "manual" |
   "maintain" | "downgrade" | "upgrade" | "watch" | "review" |
@@ -28,21 +29,7 @@ const styles: Record<string, string> = {
   resolved: "bg-muted text-muted-foreground border-border",
 };
 
-const labels: Record<string, string> = {
-  monthly_quota: "Monthly",
-  prepaid_credits: "Prepaid",
-  maintain: "Maintain",
-  downgrade: "Downgrade",
-  upgrade: "Upgrade",
-  watch: "Watch",
-  review: "Review",
-  synced: "Synced",
-  auto: "Auto",
-  adjusted: "Adjusted",
-  manual: "Manual",
-};
-
-const icons: Record<string, typeof Circle> = {
+const iconMap: Record<string, typeof Circle> = {
   synced: CheckCircle,
   healthy: CheckCircle,
   maintain: CheckCircle,
@@ -59,6 +46,29 @@ const icons: Record<string, typeof Circle> = {
   info: Info,
 };
 
+// Map status keys to dictionary keys
+const labelKeys: Record<string, string> = {
+  monthly_quota: "badgeMonthly",
+  prepaid_credits: "badgePrepaid",
+  maintain: "badgeMaintain",
+  downgrade: "badgeDowngrade",
+  upgrade: "badgeUpgrade",
+  watch: "badgeWatch",
+  review: "badgeReview",
+  synced: "badgeSynced",
+  auto: "badgeAuto",
+  adjusted: "badgeAdjusted",
+  manual: "badgeManual",
+  pending: "badgePending",
+  error: "badgeError",
+  active: "badgeActive",
+  resolved: "badgeResolved",
+  healthy: "badgeHealthy",
+  warning: "badgeWarning",
+  critical: "badgeCritical",
+  info: "badgeInfo",
+};
+
 interface StatusBadgeProps {
   status: StatusType;
   showIcon?: boolean;
@@ -66,7 +76,11 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, showIcon = false, className }: StatusBadgeProps) {
-  const IconComp = icons[status];
+  const { t } = useI18n();
+  const IconComp = iconMap[status];
+  const dictKey = labelKeys[status];
+  const label = dictKey ? (t as any)[dictKey] || status : status;
+
   return (
     <span className={cn(
       "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold capitalize leading-none",
@@ -74,7 +88,7 @@ export function StatusBadge({ status, showIcon = false, className }: StatusBadge
       className
     )}>
       {showIcon && IconComp && <IconComp className="h-3 w-3" />}
-      {labels[status] || status}
+      {label}
     </span>
   );
 }

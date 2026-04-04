@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { TrendingDown, TrendingUp, Eye, CheckCircle, ArrowRight } from "lucide-react";
 import type { RecommendationType } from "@/data/mockData";
+import { useI18n } from "@/i18n";
 
 interface RecommendationCardProps {
   providerName: string;
@@ -31,6 +32,7 @@ const accentBorders: Record<RecommendationType, string> = {
 
 export function RecommendationCard({ providerName, recommendation, text, detail, savings, className, compact }: RecommendationCardProps) {
   const Icon = icons[recommendation];
+  const { t } = useI18n();
 
   if (compact) {
     return (
@@ -67,7 +69,7 @@ export function RecommendationCard({ providerName, recommendation, text, detail,
       {savings && (
         <div className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-status-healthy-muted px-2.5 py-1 text-xs font-semibold text-status-healthy">
           <TrendingDown className="h-3 w-3" />
-          Potential savings: {savings}
+          {t.potentialSavingsLabel(savings)}
         </div>
       )}
     </div>

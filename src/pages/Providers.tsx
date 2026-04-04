@@ -5,25 +5,22 @@ import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { providers } from "@/data/mockData";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/i18n";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 
 const Providers = () => {
   const navigate = useNavigate();
+  const { t, locale } = useI18n();
 
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-[1400px]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Providers & Tools</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.providersTitle}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {providers.length} tracked · {providers.filter(p => p.syncStatus === "synced").length} synced · {providers.filter(p => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length} manual
+            {t.providersSubtitle(providers.length, providers.filter(p => p.syncStatus === "synced").length, providers.filter(p => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length)}
           </p>
         </div>
 
@@ -32,25 +29,21 @@ const Providers = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Provider</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead className="w-[160px]">Quota Usage</TableHead>
-                  <TableHead className="text-right">Remaining</TableHead>
-                  <TableHead className="text-right">Overage</TableHead>
-                  <TableHead>Reset</TableHead>
-                  <TableHead>Sync</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead className="w-[200px]">{t.thProvider}</TableHead>
+                  <TableHead>{t.thPlan}</TableHead>
+                  <TableHead className="text-right">{t.thCost}</TableHead>
+                  <TableHead className="w-[160px]">{t.thQuotaUsage}</TableHead>
+                  <TableHead className="text-right">{t.thRemaining}</TableHead>
+                  <TableHead className="text-right">{t.thOverage}</TableHead>
+                  <TableHead>{t.thReset}</TableHead>
+                  <TableHead>{t.thSync}</TableHead>
+                  <TableHead>{t.thData}</TableHead>
+                  <TableHead>{t.thAction}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {providers.map((p) => (
-                  <TableRow
-                    key={p.id}
-                    className="cursor-pointer hover:bg-muted/40"
-                    onClick={() => navigate(`/providers/${p.id}`)}
-                  >
+                  <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/providers/${p.id}`)}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <ProviderLogo name={p.name} logo={p.logo} size="sm" />
@@ -68,25 +61,15 @@ const Providers = () => {
                     </TableCell>
                     <TableCell className="text-right font-semibold tabular-nums">€{p.monthlyCost}</TableCell>
                     <TableCell>
-                      <UsageProgressBar
-                        value={p.usagePercent}
-                        size="xs"
-                        label={`${(p.consumed / 1000).toFixed(0)}k / ${(p.includedQuota / 1000).toFixed(0)}k`}
-                      />
+                      <UsageProgressBar value={p.usagePercent} size="xs" label={`${(p.consumed / 1000).toFixed(0)}k / ${(p.includedQuota / 1000).toFixed(0)}k`} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {p.remaining > 0 ? `${(p.remaining / 1000).toFixed(0)}k` : "—"}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{p.remaining > 0 ? `${(p.remaining / 1000).toFixed(0)}k` : "—"}</TableCell>
                     <TableCell className="text-right">
-                      {p.overage > 0 ? (
-                        <span className="font-bold text-status-critical tabular-nums">€{p.overage}</span>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
-                      )}
+                      {p.overage > 0 ? <span className="font-bold text-status-critical tabular-nums">€{p.overage}</span> : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs">{new Date(p.resetDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                        <span className="text-xs">{new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
                         <p className="text-[10px] text-muted-foreground">{p.daysUntilReset}d</p>
                       </div>
                     </TableCell>

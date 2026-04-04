@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 interface SpendBarProps {
   planCost: number;
@@ -8,6 +9,7 @@ interface SpendBarProps {
 }
 
 export function SpendBar({ planCost, overage, budget, className }: SpendBarProps) {
+  const { t } = useI18n();
   const planPercent = Math.min((planCost / budget) * 100, 100);
   const overagePercent = Math.min((overage / budget) * 100, 100 - planPercent);
 
@@ -32,12 +34,12 @@ export function SpendBar({ planCost, overage, budget, className }: SpendBarProps
       <div className="flex items-center gap-4 text-[10px]">
         <div className="flex items-center gap-1">
           <div className="h-2 w-2 rounded-sm bg-spend-plan" />
-          <span className="text-muted-foreground">Plans €{planCost}</span>
+          <span className="text-muted-foreground">{t.plans} €{planCost}</span>
         </div>
         {overage > 0 && (
           <div className="flex items-center gap-1">
             <div className="h-2 w-2 rounded-sm bg-spend-overage" />
-            <span className="text-muted-foreground">Overage €{overage}</span>
+            <span className="text-muted-foreground">{t.overage} €{overage}</span>
           </div>
         )}
       </div>
