@@ -23,7 +23,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="text-border">·</span>
               <span>April 2026</span>
             </div>
-          </header>
+            <div className="ml-auto">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+            </div>
           <main className="flex-1 overflow-auto p-5">
             {children}
           </main>
