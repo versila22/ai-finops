@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { I18nProvider } from "@/i18n";
 import Index from "./pages/Index.tsx";
 import Providers from "./pages/Providers.tsx";
 import ProviderDetail from "./pages/ProviderDetail.tsx";
@@ -15,21 +16,23 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/providers" element={<Providers />} />
-          <Route path="/providers/:id" element={<ProviderDetail />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/plans" element={<Plans />} />
-          <Route path="/adjustments" element={<Adjustments />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <I18nProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/providers" element={<Providers />} />
+            <Route path="/providers/:id" element={<ProviderDetail />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/adjustments" element={<Adjustments />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </I18nProvider>
   </QueryClientProvider>
 );
 
