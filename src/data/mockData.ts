@@ -8,6 +8,7 @@ export type AlertStatus = "active" | "resolved";
 export interface Provider {
   id: string;
   name: string;
+  logo: string;
   category: string;
   plan: string;
   planType: PlanType;
@@ -19,11 +20,13 @@ export interface Provider {
   usagePercent: number;
   overage: number;
   resetDate: string;
+  daysUntilReset: number;
   syncStatus: SyncStatus;
   lastSync: string;
   dataOrigin: DataOrigin;
   recommendation: RecommendationType;
   recommendationText: string;
+  recommendationDetail: string;
 }
 
 export interface Alert {
@@ -59,6 +62,7 @@ export const providers: Provider[] = [
   {
     id: "openai",
     name: "OpenAI",
+    logo: "O",
     category: "LLM / API",
     plan: "Pro + API",
     planType: "monthly_quota",
@@ -70,15 +74,18 @@ export const providers: Provider[] = [
     usagePercent: 82,
     overage: 0,
     resetDate: "2026-04-30",
+    daysUntilReset: 26,
     syncStatus: "synced",
     lastSync: "2026-04-04T08:30:00Z",
     dataOrigin: "auto",
     recommendation: "watch",
-    recommendationText: "At 82% usage with 26 days remaining. Monitor closely — may need upgrade next cycle.",
+    recommendationText: "Quota exhaustion risk",
+    recommendationDetail: "At 82% usage with 26 days remaining. Current pace projects 100% by Apr 18. Consider upgrading next cycle or throttling non-critical workloads.",
   },
   {
     id: "anthropic",
     name: "Anthropic",
+    logo: "A",
     category: "LLM / API",
     plan: "API Usage",
     planType: "monthly_quota",
@@ -90,15 +97,18 @@ export const providers: Provider[] = [
     usagePercent: 45,
     overage: 0,
     resetDate: "2026-04-30",
+    daysUntilReset: 26,
     syncStatus: "synced",
     lastSync: "2026-04-04T08:25:00Z",
     dataOrigin: "auto",
     recommendation: "maintain",
-    recommendationText: "Healthy usage at 45%. Current plan is well-sized.",
+    recommendationText: "Well-sized plan",
+    recommendationDetail: "Healthy usage at 45% with 26 days remaining. Pace is sustainable and plan is appropriately sized.",
   },
   {
     id: "google",
     name: "Google AI / Vertex",
+    logo: "G",
     category: "LLM / Cloud AI",
     plan: "Prepaid Credits",
     planType: "prepaid_credits",
@@ -110,15 +120,18 @@ export const providers: Provider[] = [
     usagePercent: 18,
     overage: 0,
     resetDate: "2026-06-30",
+    daysUntilReset: 87,
     syncStatus: "synced",
     lastSync: "2026-04-04T07:00:00Z",
     dataOrigin: "auto",
     recommendation: "downgrade",
-    recommendationText: "Only 18% of prepaid credits used. Consider a smaller credit pack next cycle.",
+    recommendationText: "Underused credit pack",
+    recommendationDetail: "Only 18% of €500 prepaid credits consumed. At current pace, ~€320 will expire unused. Consider a €200 pack next cycle — saves €300.",
   },
   {
     id: "elevenlabs",
     name: "ElevenLabs",
+    logo: "E",
     category: "Voice AI",
     plan: "Scale Plan",
     planType: "monthly_quota",
@@ -130,15 +143,18 @@ export const providers: Provider[] = [
     usagePercent: 117,
     overage: 47,
     resetDate: "2026-04-28",
+    daysUntilReset: 24,
     syncStatus: "pending",
     lastSync: "2026-04-03T22:00:00Z",
     dataOrigin: "auto",
     recommendation: "upgrade",
-    recommendationText: "€47 overage this cycle. Upgrade to next tier to save ~€30/mo.",
+    recommendationText: "Upgrade to stop overage",
+    recommendationDetail: "€47 overage this cycle from 340K excess characters. Pro plan at €149/mo includes 4M characters — would eliminate overage and save ~€30/mo net.",
   },
   {
     id: "lovable",
     name: "Lovable",
+    logo: "L",
     category: "AI Dev Platform",
     plan: "Teams Plan",
     planType: "monthly_quota",
@@ -150,11 +166,13 @@ export const providers: Provider[] = [
     usagePercent: 60,
     overage: 0,
     resetDate: "2026-04-30",
+    daysUntilReset: 26,
     syncStatus: "manual",
     lastSync: "2026-04-02T10:00:00Z",
     dataOrigin: "adjusted",
     recommendation: "maintain",
-    recommendationText: "Usage at 60% with manual adjustments applied. Plan is well-sized.",
+    recommendationText: "Plan OK — manual tracking",
+    recommendationDetail: "Usage at 60% with manual adjustments. Auto-sync unavailable — data may lag. Plan size is appropriate.",
   },
 ];
 
@@ -166,8 +184,8 @@ export const alerts: Alert[] = [
     providerId: "openai",
     providerName: "OpenAI",
     triggerDate: "2026-04-03",
-    description: "OpenAI usage has reached 82% of monthly quota with 26 days remaining.",
-    recommendedAction: "Monitor usage rate. Consider upgrading if pace continues.",
+    description: "OpenAI usage at 82% of monthly quota with 26 days remaining.",
+    recommendedAction: "Monitor daily pace. Upgrade if projected to exceed by Apr 15.",
     status: "active",
   },
   {
@@ -177,8 +195,8 @@ export const alerts: Alert[] = [
     providerId: "elevenlabs",
     providerName: "ElevenLabs",
     triggerDate: "2026-04-02",
-    description: "ElevenLabs has exceeded quota by 340K characters. Overage cost: €47.",
-    recommendedAction: "Upgrade to next plan tier to avoid recurring overage.",
+    description: "ElevenLabs exceeded quota — 340K excess characters. Overage: €47.",
+    recommendedAction: "Upgrade to Pro plan to eliminate recurring overage.",
     status: "active",
   },
   {
@@ -188,8 +206,8 @@ export const alerts: Alert[] = [
     providerId: "google",
     providerName: "Google AI / Vertex",
     triggerDate: "2026-04-01",
-    description: "Google prepaid credits at only 18% utilization. Risk of waste.",
-    recommendedAction: "Downgrade to a smaller credit pack or redistribute usage.",
+    description: "Google prepaid credits at 18% — €410 at risk of expiring unused.",
+    recommendedAction: "Switch to smaller credit pack or redistribute AI workloads to Google.",
     status: "active",
   },
   {
@@ -199,8 +217,8 @@ export const alerts: Alert[] = [
     providerId: "elevenlabs",
     providerName: "ElevenLabs",
     triggerDate: "2026-04-04",
-    description: "ElevenLabs sync is pending. Last successful sync was 6 hours ago.",
-    recommendedAction: "Check API key validity and retry sync.",
+    description: "ElevenLabs sync pending for 6+ hours.",
+    recommendedAction: "Verify API key and retry sync.",
     status: "active",
   },
   {
@@ -210,8 +228,8 @@ export const alerts: Alert[] = [
     providerId: "lovable",
     providerName: "Lovable",
     triggerDate: "2026-03-28",
-    description: "Lovable is in manual data mode. Auto-sync is disabled.",
-    recommendedAction: "Re-enable auto-sync or verify manual entries.",
+    description: "Lovable running in manual data mode. Auto-sync disabled.",
+    recommendedAction: "Re-enable auto-sync or ensure manual entries are current.",
     status: "active",
   },
   {
@@ -222,7 +240,7 @@ export const alerts: Alert[] = [
     providerName: "OpenAI",
     triggerDate: "2026-03-15",
     description: "Monthly spend exceeded 75% of budget at mid-cycle.",
-    recommendedAction: "Review spending pace and adjust budget if needed.",
+    recommendedAction: "Reviewed and adjusted budget allocation.",
     status: "resolved",
   },
 ];
@@ -263,31 +281,34 @@ export const adjustments: ManualAdjustment[] = [
 export const generateDailyUsage = (providerId: string): DailyUsage[] => {
   const provider = providers.find((p) => p.id === providerId);
   if (!provider) return [];
-  const days = 30;
-  const dailyAvg = provider.consumed / days;
+
+  const baseDaily = provider.consumed / 30;
   const data: DailyUsage[] = [];
   let cumulative = 0;
-  for (let i = 1; i <= 4; i++) {
-    const variance = 0.5 + Math.random();
-    const consumed = Math.round(dailyAvg * variance);
+
+  for (let i = 1; i <= 30; i++) {
+    const dayVariance = 0.3 + Math.sin(i * 0.4) * 0.5 + Math.random() * 0.5;
+    const consumed = Math.round(baseDaily * dayVariance);
     cumulative += consumed;
-    data.push({
-      date: `Apr ${i}`,
-      consumed,
-      cumulative: Math.min(cumulative, provider.consumed),
-    });
-  }
-  // backfill the rest to approximate total
-  const remaining = provider.consumed - cumulative;
-  if (remaining > 0) {
-    data[data.length - 1].cumulative = provider.consumed;
+    if (i <= 4) {
+      data.push({
+        date: `Apr ${i}`,
+        consumed,
+        cumulative: Math.min(cumulative, provider.consumed),
+      });
+    }
   }
   return data;
 };
 
+// Computed KPIs
 export const monthlyBudget = 1200;
-export const totalSpend = providers.reduce((sum, p) => sum + p.monthlyCost + p.overage, 0);
-export const totalOverage = providers.reduce((sum, p) => sum + p.overage, 0);
-export const activeAlerts = alerts.filter((a) => a.status === "active").length;
-export const underusedPlans = providers.filter((p) => p.usagePercent < 30).length;
-export const nearExhaustion = providers.filter((p) => p.usagePercent >= 80 && p.usagePercent <= 100).length;
+export const totalPlanSpend = providers.reduce((s, p) => s + p.monthlyCost, 0);
+export const totalOverage = providers.reduce((s, p) => s + p.overage, 0);
+export const totalSpend = totalPlanSpend + totalOverage;
+export const budgetUsedPercent = Math.round((totalSpend / monthlyBudget) * 100);
+export const activeAlertCount = alerts.filter((a) => a.status === "active").length;
+export const underusedPlans = providers.filter((p) => p.usagePercent < 30);
+export const nearExhaustion = providers.filter((p) => p.usagePercent >= 80 && p.usagePercent <= 100);
+export const overageProviders = providers.filter((p) => p.overage > 0);
+export const potentialSavings = 300 + 30; // google downgrade + elevenlabs upgrade net
