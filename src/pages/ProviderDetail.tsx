@@ -7,7 +7,7 @@ import { RecommendationCard } from "@/components/dashboard/RecommendationCard";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { providers, alerts, adjustments, generateDailyUsage } from "@/data/mockData";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, RefreshCw } from "lucide-react";
+import { ArrowLeft, Clock, RefreshCw, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useI18n } from "@/i18n";
@@ -32,6 +32,13 @@ const ProviderDetail = () => {
   const providerAdjustments = adjustments.filter((a) => a.providerId === id);
   const dailyUsage = generateDailyUsage(id!);
 
+  const trendIcon = provider.trend === "up"
+    ? <TrendingUp className="h-3.5 w-3.5 text-status-warning" />
+    : provider.trend === "down"
+    ? <TrendingDown className="h-3.5 w-3.5 text-status-info" />
+    : <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+  const trendText = provider.trend === "up" ? t.trendUp : provider.trend === "down" ? t.trendDown : t.trendStable;
+
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-[1200px]">
@@ -51,7 +58,7 @@ const ProviderDetail = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <Card className="p-4 flex flex-col items-center justify-center col-span-1">
             <RadialProgress value={provider.usagePercent} size={88} strokeWidth={6} />
             <p className="text-[10px] text-muted-foreground font-medium mt-1.5">{t.quotaUsed}</p>
@@ -77,6 +84,16 @@ const ProviderDetail = () => {
               {provider.overage > 0 ? `€${provider.overage}` : "€0"}
             </p>
             <p className="text-[10px] text-muted-foreground">{t.daysUntilReset(provider.daysUntilReset)}</p>
+          </Card>
+          <Card className="p-4 border-l-[3px] border-l-primary/50">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.projectedLabel}</p>
+            <p className={`text-xl font-bold mt-1 tabular-nums ${provider.projectedEndOfCycle > 100 ? "text-status-critical" : provider.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>
+              {provider.projectedEndOfCycle}%
+            </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              {trendIcon}
+              <span className="text-[10px] text-muted-foreground">{trendText}</span>
+            </div>
           </Card>
         </div>
 
@@ -116,7 +133,14 @@ const ProviderDetail = () => {
           </Card>
 
           <div className="lg:col-span-2">
-            <RecommendationCard providerName={provider.name} recommendation={provider.recommendation} text={provider.recommendationText} detail={provider.recommendationDetail} savings={provider.recommendation === "downgrade" ? "~€300" : provider.recommendation === "upgrade" ? "~€30/mo" : undefined} />
+            <RecommendationCard
+              providerName={provider.name}
+              recommendation={provider.recommendation}
+              text={provider.recommendationText}
+              detail={provider.recommendationDetail}
+              savings={provider.savings}
+              urgency={provider.urgency}
+            />
           </div>
         </div>
 
@@ -181,6 +205,11 @@ const ProviderDetail = () => {
           <div className="flex items-center gap-1.5">
             <span>{t.dataOrigin}:</span>
             <StatusBadge status={provider.dataOrigin} />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>{t.trendLabel}:</span>
+            {trendIcon}
+            <span>{trendText}</span>
           </div>
         </div>
       </div>

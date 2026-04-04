@@ -6,6 +6,7 @@ import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { providers } from "@/data/mockData";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/i18n";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -35,6 +36,8 @@ const Providers = () => {
                   <TableHead className="w-[160px]">{t.thQuotaUsage}</TableHead>
                   <TableHead className="text-right">{t.thRemaining}</TableHead>
                   <TableHead className="text-right">{t.thOverage}</TableHead>
+                  <TableHead className="text-center">{t.thTrend}</TableHead>
+                  <TableHead className="text-right">{t.thProjected}</TableHead>
                   <TableHead>{t.thReset}</TableHead>
                   <TableHead>{t.thSync}</TableHead>
                   <TableHead>{t.thData}</TableHead>
@@ -67,10 +70,20 @@ const Providers = () => {
                     <TableCell className="text-right">
                       {p.overage > 0 ? <span className="font-bold text-status-critical tabular-nums">€{p.overage}</span> : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
+                    <TableCell className="text-center">
+                      {p.trend === "up" && <TrendingUp className="inline h-3.5 w-3.5 text-status-warning" />}
+                      {p.trend === "down" && <TrendingDown className="inline h-3.5 w-3.5 text-status-info" />}
+                      {p.trend === "stable" && <Minus className="inline h-3.5 w-3.5 text-muted-foreground" />}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={`text-sm font-semibold tabular-nums ${p.projectedEndOfCycle > 100 ? "text-status-critical" : p.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>
+                        {p.projectedEndOfCycle}%
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div>
                         <span className="text-xs">{new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
-                        <p className="text-[10px] text-muted-foreground">{p.daysUntilReset}d</p>
+                        <p className="text-[10px] text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</p>
                       </div>
                     </TableCell>
                     <TableCell><StatusBadge status={p.syncStatus} showIcon /></TableCell>

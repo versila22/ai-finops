@@ -5,13 +5,7 @@ import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { providers } from "@/data/mockData";
 import { useI18n } from "@/i18n";
-
-function getProjectedStatus(p: typeof providers[0]) {
-  if (p.usagePercent > 100) return { status: "critical" as const };
-  if (p.usagePercent >= 80) return { status: "warning" as const };
-  if (p.usagePercent < 30) return { status: "info" as const };
-  return { status: "healthy" as const };
-}
+import { TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
 
 const Plans = () => {
   const { t, locale } = useI18n();
@@ -28,7 +22,13 @@ const Plans = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {providers.map((p) => {
-            const projected = getProjectedStatus(p);
+            const trendIcon = p.trend === "up"
+              ? <TrendingUp className="h-3 w-3 text-status-warning" />
+              : p.trend === "down"
+              ? <TrendingDown className="h-3 w-3 text-status-info" />
+              : <Minus className="h-3 w-3 text-muted-foreground" />;
+            const trendText = p.trend === "up" ? t.trendUp : p.trend === "down" ? t.trendDown : t.trendStable;
+
             return (
               <Card key={p.id} className="overflow-hidden">
                 <div className={`h-1 w-full ${p.planType === "prepaid_credits" ? "bg-spend-prepaid" : "bg-spend-plan"}`} />
@@ -63,8 +63,17 @@ const Plans = () => {
 
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <div className="space-y-0.5">
-                      <p className="text-[10px] text-muted-foreground">{t.projected}</p>
-                      <StatusBadge status={projected.status} />
+                      <p className="text-[10px] text-muted-foreground">{t.projectedLabel}</p>
+                      <span className={`text-sm font-bold tabular-nums ${p.projectedEndOfCycle > 100 ? "text-status-critical" : p.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>
+                        {p.projectedEndOfCycle}%
+                      </span>
+                    </div>
+                    <div className="space-y-0.5 text-center">
+                      <p className="text-[10px] text-muted-foreground">{t.trendLabel}</p>
+                      <div className="flex items-center justify-center gap-1">
+                        {trendIcon}
+                        <span className="text-[10px] text-muted-foreground">{trendText}</span>
+                      </div>
                     </div>
                     <div className="space-y-0.5 text-right">
                       <p className="text-[10px] text-muted-foreground">{t.action}</p>
@@ -78,9 +87,17 @@ const Plans = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>{t.resets} {new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
-                    <span>{t.daysLeftLabel(p.daysUntilReset)}</span>
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/30">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5" />
+                      <span>{t.lastSyncShort}: {new Date(p.lastSync).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
+                    </div>
+                    <span>{t.resets} {new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })} · {t.daysLeftLabel(p.daysUntilReset)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={p.syncStatus} showIcon />
+                    <StatusBadge status={p.dataOrigin} />
                   </div>
                 </CardContent>
               </Card>

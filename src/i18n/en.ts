@@ -40,6 +40,33 @@ const en = {
   alertCenter: "Alert center",
   daysLeft: (d: number) => `${d}d left`,
 
+  // Risk summary
+  riskSummaryTitle: "Risk & Savings Overview",
+  riskAtRisk: "At Risk",
+  riskOverspending: "Overspending",
+  riskOptimizable: "Optimizable",
+  riskHealthy: "Healthy",
+  projectedOverage: "Projected overage",
+  activeOverage: "Active overage",
+  savingsAvailable: "Savings available",
+  onTrack: "On track",
+
+  // Recommendation card
+  recAction: "Action",
+  recReason: "Reason",
+  recImpact: "Estimated Impact",
+  recUrgency: "Urgency",
+  urgencyHigh: "High",
+  urgencyMedium: "Medium",
+  urgencyLow: "Low",
+
+  // Projected
+  projectedLabel: "Projected EoC",
+  trendUp: "Trending up",
+  trendDown: "Trending down",
+  trendStable: "Stable",
+  lastSyncShort: "Synced",
+
   // Providers page
   providersTitle: "Providers & Tools",
   providersSubtitle: (total: number, synced: number, manual: number) =>
@@ -54,6 +81,8 @@ const en = {
   thSync: "Sync",
   thData: "Data",
   thAction: "Action",
+  thTrend: "Trend",
+  thProjected: "Projected",
 
   // Provider detail
   providerNotFound: "Provider not found",
@@ -72,6 +101,8 @@ const en = {
   syncLabel: "Sync",
   lastSynced: "Last synced",
   dataOrigin: "Data origin",
+  projectedEndOfCycle: "Projected end-of-cycle",
+  trendLabel: "Trend",
 
   // Alerts page
   alertsTitle: "Alerts Center",
