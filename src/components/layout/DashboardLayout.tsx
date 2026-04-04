@@ -28,6 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
             </div>
+          </header>
           <main className="flex-1 overflow-auto p-5">
             {children}
           </main>
