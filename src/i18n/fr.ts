@@ -39,6 +39,30 @@ const fr: Dictionary = {
   alertCenter: "Centre d'alertes",
   daysLeft: (d) => `${d}j restants`,
 
+  riskSummaryTitle: "Vue d'ensemble risques & économies",
+  riskAtRisk: "À risque",
+  riskOverspending: "Dépassement",
+  riskOptimizable: "Optimisable",
+  riskHealthy: "Sain",
+  projectedOverage: "Dépassement projeté",
+  activeOverage: "Dépassement actif",
+  savingsAvailable: "Économies possibles",
+  onTrack: "En bonne voie",
+
+  recAction: "Action",
+  recReason: "Raison",
+  recImpact: "Impact estimé",
+  recUrgency: "Urgence",
+  urgencyHigh: "Élevée",
+  urgencyMedium: "Moyenne",
+  urgencyLow: "Faible",
+
+  projectedLabel: "Projection fin de cycle",
+  trendUp: "En hausse",
+  trendDown: "En baisse",
+  trendStable: "Stable",
+  lastSyncShort: "Synchronisé",
+
   providersTitle: "Fournisseurs & Outils",
   providersSubtitle: (total, synced, manual) =>
     `${total} suivis · ${synced} synchronisés · ${manual} manuels`,
@@ -52,6 +76,8 @@ const fr: Dictionary = {
   thSync: "Sync",
   thData: "Données",
   thAction: "Action",
+  thTrend: "Tendance",
+  thProjected: "Projection",
 
   providerNotFound: "Fournisseur introuvable",
   quotaUsed: "Quota utilisé",
@@ -69,6 +95,8 @@ const fr: Dictionary = {
   syncLabel: "Sync",
   lastSynced: "Dernière sync",
   dataOrigin: "Origine des données",
+  projectedEndOfCycle: "Projection fin de cycle",
+  trendLabel: "Tendance",
 
   alertsTitle: "Centre d'alertes",
   alertsSubtitle: (active, resolved) => `${active} actives · ${resolved} résolues`,

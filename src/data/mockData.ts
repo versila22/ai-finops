@@ -4,6 +4,7 @@ export type PlanType = "monthly_quota" | "prepaid_credits";
 export type RecommendationType = "maintain" | "downgrade" | "upgrade" | "watch" | "review";
 export type AlertSeverity = "critical" | "warning" | "info";
 export type AlertStatus = "active" | "resolved";
+export type Urgency = "high" | "medium" | "low";
 
 export interface Provider {
   id: string;
@@ -27,6 +28,10 @@ export interface Provider {
   recommendation: RecommendationType;
   recommendationText: string;
   recommendationDetail: string;
+  savings?: string;
+  urgency: Urgency;
+  projectedEndOfCycle: number; // projected % at cycle end
+  trend: "up" | "down" | "stable";
 }
 
 export interface Alert {
@@ -81,6 +86,9 @@ export const providers: Provider[] = [
     recommendation: "watch",
     recommendationText: "Quota exhaustion risk",
     recommendationDetail: "At 82% usage with 26 days remaining. Current pace projects 100% by Apr 18. Consider upgrading next cycle or throttling non-critical workloads.",
+    urgency: "high",
+    projectedEndOfCycle: 158,
+    trend: "up",
   },
   {
     id: "anthropic",
@@ -104,6 +112,9 @@ export const providers: Provider[] = [
     recommendation: "maintain",
     recommendationText: "Well-sized plan",
     recommendationDetail: "Healthy usage at 45% with 26 days remaining. Pace is sustainable and plan is appropriately sized.",
+    urgency: "low",
+    projectedEndOfCycle: 84,
+    trend: "stable",
   },
   {
     id: "google",
@@ -126,7 +137,11 @@ export const providers: Provider[] = [
     dataOrigin: "auto",
     recommendation: "downgrade",
     recommendationText: "Underused credit pack",
-    recommendationDetail: "Only 18% of €500 prepaid credits consumed. At current pace, ~€320 will expire unused. Consider a €200 pack next cycle — saves €300.",
+    recommendationDetail: "Only 18% of €500 prepaid credits consumed. At current pace, ~€320 will expire unused. Consider a €200 pack next cycle.",
+    savings: "~€300",
+    urgency: "medium",
+    projectedEndOfCycle: 34,
+    trend: "down",
   },
   {
     id: "elevenlabs",
@@ -150,6 +165,10 @@ export const providers: Provider[] = [
     recommendation: "upgrade",
     recommendationText: "Upgrade to stop overage",
     recommendationDetail: "€47 overage this cycle from 340K excess characters. Pro plan at €149/mo includes 4M characters — would eliminate overage and save ~€30/mo net.",
+    savings: "~€30/mo",
+    urgency: "high",
+    projectedEndOfCycle: 175,
+    trend: "up",
   },
   {
     id: "lovable",
@@ -173,6 +192,9 @@ export const providers: Provider[] = [
     recommendation: "maintain",
     recommendationText: "Plan OK — manual tracking",
     recommendationDetail: "Usage at 60% with manual adjustments. Auto-sync unavailable — data may lag. Plan size is appropriate.",
+    urgency: "low",
+    projectedEndOfCycle: 92,
+    trend: "stable",
   },
 ];
 
@@ -311,4 +333,4 @@ export const activeAlertCount = alerts.filter((a) => a.status === "active").leng
 export const underusedPlans = providers.filter((p) => p.usagePercent < 30);
 export const nearExhaustion = providers.filter((p) => p.usagePercent >= 80 && p.usagePercent <= 100);
 export const overageProviders = providers.filter((p) => p.overage > 0);
-export const potentialSavings = 300 + 30; // google downgrade + elevenlabs upgrade net
+export const potentialSavings = 300 + 30;
