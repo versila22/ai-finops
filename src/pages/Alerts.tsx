@@ -3,17 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { alerts } from "@/data/mockData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bell, CheckCircle } from "lucide-react";
+import { useI18n } from "@/i18n";
 
 const Alerts = () => {
+  const { t } = useI18n();
   const activeAlerts = alerts.filter((a) => a.status === "active");
   const resolvedAlerts = alerts.filter((a) => a.status === "resolved");
 
@@ -21,20 +16,18 @@ const Alerts = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[80px]">Severity</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Provider</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead className="max-w-[300px]">Description</TableHead>
-          <TableHead className="max-w-[250px]">Recommended Action</TableHead>
+          <TableHead className="w-[80px]">{t.thSeverity}</TableHead>
+          <TableHead>{t.thType}</TableHead>
+          <TableHead>{t.thProvider}</TableHead>
+          <TableHead>{t.thDate}</TableHead>
+          <TableHead className="max-w-[300px]">{t.thDescription}</TableHead>
+          <TableHead className="max-w-[250px]">{t.thRecommendedAction}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
-              No alerts to display
-            </TableCell>
+            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">{t.noAlertsToDisplay}</TableCell>
           </TableRow>
         ) : (
           items.map((a) => (
@@ -60,33 +53,25 @@ const Alerts = () => {
             <Bell className="h-4 w-4 text-status-warning" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Alerts Center</h1>
-            <p className="text-sm text-muted-foreground">{activeAlerts.length} active · {resolvedAlerts.length} resolved</p>
+            <h1 className="text-2xl font-bold tracking-tight">{t.alertsTitle}</h1>
+            <p className="text-sm text-muted-foreground">{t.alertsSubtitle(activeAlerts.length, resolvedAlerts.length)}</p>
           </div>
         </div>
 
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active" className="gap-1.5">
-              <Bell className="h-3 w-3" /> Active ({activeAlerts.length})
+              <Bell className="h-3 w-3" /> {t.tabActive(activeAlerts.length)}
             </TabsTrigger>
             <TabsTrigger value="resolved" className="gap-1.5">
-              <CheckCircle className="h-3 w-3" /> Resolved ({resolvedAlerts.length})
+              <CheckCircle className="h-3 w-3" /> {t.tabResolved(resolvedAlerts.length)}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="active">
-            <Card>
-              <CardContent className="p-0">
-                <AlertTable items={activeAlerts} />
-              </CardContent>
-            </Card>
+            <Card><CardContent className="p-0"><AlertTable items={activeAlerts} /></CardContent></Card>
           </TabsContent>
           <TabsContent value="resolved">
-            <Card>
-              <CardContent className="p-0">
-                <AlertTable items={resolvedAlerts} />
-              </CardContent>
-            </Card>
+            <Card><CardContent className="p-0"><AlertTable items={resolvedAlerts} /></CardContent></Card>
           </TabsContent>
         </Tabs>
       </div>
