@@ -5,9 +5,10 @@ interface RadialProgressProps {
   size?: number;
   strokeWidth?: number;
   className?: string;
+  label?: string;
 }
 
-export function RadialProgress({ value, size = 80, strokeWidth = 8, className }: RadialProgressProps) {
+export function RadialProgress({ value, size = 80, strokeWidth = 7, className, label }: RadialProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const clampedValue = Math.min(value, 100);
@@ -18,11 +19,17 @@ export function RadialProgress({ value, size = 80, strokeWidth = 8, className }:
     : value >= 80
     ? "text-status-warning"
     : value < 30
-    ? "text-status-info"
+    ? "text-primary/60"
     : "text-status-healthy";
 
+  const trackColor = value > 100
+    ? "text-status-critical-muted"
+    : value >= 80
+    ? "text-status-warning-muted"
+    : "text-secondary";
+
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)}>
+    <div className={cn("relative inline-flex flex-col items-center justify-center", className)}>
       <svg width={size} height={size} className="-rotate-90">
         <circle
           cx={size / 2}
@@ -31,7 +38,7 @@ export function RadialProgress({ value, size = 80, strokeWidth = 8, className }:
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-secondary"
+          className={trackColor}
         />
         <circle
           cx={size / 2}
@@ -43,12 +50,13 @@ export function RadialProgress({ value, size = 80, strokeWidth = 8, className }:
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className={cn("transition-all duration-500", color)}
+          className={cn("transition-all duration-700 ease-out", color)}
         />
       </svg>
-      <span className={cn("absolute text-sm font-bold", color)}>
-        {value}%
-      </span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={cn("text-sm font-bold tabular-nums", color)}>{value}%</span>
+      </div>
+      {label && <span className="text-[10px] text-muted-foreground mt-1 font-medium">{label}</span>}
     </div>
   );
 }

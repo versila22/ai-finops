@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Bell, CheckCircle } from "lucide-react";
 
 const Alerts = () => {
   const activeAlerts = alerts.filter((a) => a.status === "active");
@@ -20,41 +21,58 @@ const Alerts = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Severity</TableHead>
+          <TableHead className="w-[80px]">Severity</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Provider</TableHead>
           <TableHead>Date</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Recommended Action</TableHead>
+          <TableHead className="max-w-[300px]">Description</TableHead>
+          <TableHead className="max-w-[250px]">Recommended Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((a) => (
-          <TableRow key={a.id}>
-            <TableCell><StatusBadge status={a.severity} /></TableCell>
-            <TableCell className="font-medium text-sm">{a.type}</TableCell>
-            <TableCell className="text-sm">{a.providerName}</TableCell>
-            <TableCell className="text-xs text-muted-foreground">{a.triggerDate}</TableCell>
-            <TableCell className="text-sm max-w-[280px]">{a.description}</TableCell>
-            <TableCell className="text-xs text-muted-foreground max-w-[240px]">{a.recommendedAction}</TableCell>
+        {items.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+              No alerts to display
+            </TableCell>
           </TableRow>
-        ))}
+        ) : (
+          items.map((a) => (
+            <TableRow key={a.id}>
+              <TableCell><StatusBadge status={a.severity} showIcon /></TableCell>
+              <TableCell className="text-sm font-medium">{a.type}</TableCell>
+              <TableCell className="text-sm font-semibold">{a.providerName}</TableCell>
+              <TableCell className="text-xs text-muted-foreground tabular-nums">{a.triggerDate}</TableCell>
+              <TableCell className="text-xs max-w-[300px] leading-relaxed">{a.description}</TableCell>
+              <TableCell className="text-xs text-muted-foreground max-w-[250px] leading-relaxed">{a.recommendedAction}</TableCell>
+            </TableRow>
+          ))
+        )}
       </TableBody>
     </Table>
   );
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-7xl">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Alerts Center</h1>
-          <p className="text-sm text-muted-foreground mt-1">{activeAlerts.length} active alerts</p>
+      <div className="space-y-6 max-w-[1200px]">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-status-warning-muted">
+            <Bell className="h-4 w-4 text-status-warning" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Alerts Center</h1>
+            <p className="text-sm text-muted-foreground">{activeAlerts.length} active · {resolvedAlerts.length} resolved</p>
+          </div>
         </div>
 
         <Tabs defaultValue="active">
           <TabsList>
-            <TabsTrigger value="active">Active ({activeAlerts.length})</TabsTrigger>
-            <TabsTrigger value="resolved">Resolved ({resolvedAlerts.length})</TabsTrigger>
+            <TabsTrigger value="active" className="gap-1.5">
+              <Bell className="h-3 w-3" /> Active ({activeAlerts.length})
+            </TabsTrigger>
+            <TabsTrigger value="resolved" className="gap-1.5">
+              <CheckCircle className="h-3 w-3" /> Resolved ({resolvedAlerts.length})
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="active">
             <Card>

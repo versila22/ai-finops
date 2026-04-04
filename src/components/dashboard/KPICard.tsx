@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 
 interface KPICardProps {
@@ -7,34 +6,36 @@ interface KPICardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  trend?: "up" | "down" | "neutral";
   status?: "healthy" | "warning" | "critical" | "info";
+  accent?: boolean;
 }
 
-export function KPICard({ title, value, subtitle, icon: Icon, status = "info" }: KPICardProps) {
-  const statusBg = {
-    healthy: "bg-status-healthy-muted",
-    warning: "bg-status-warning-muted",
-    critical: "bg-status-critical-muted",
-    info: "bg-status-info-muted",
+export function KPICard({ title, value, subtitle, icon: Icon, status = "info", accent }: KPICardProps) {
+  const statusBorder = {
+    healthy: "border-l-status-healthy",
+    warning: "border-l-status-warning",
+    critical: "border-l-status-critical",
+    info: "border-l-primary",
   };
   const statusIcon = {
     healthy: "text-status-healthy",
     warning: "text-status-warning",
     critical: "text-status-critical",
-    info: "text-status-info",
+    info: "text-primary",
   };
 
   return (
-    <Card className="p-5 flex items-start gap-4">
-      <div className={cn("rounded-lg p-2.5", statusBg[status])}>
-        <Icon className={cn("h-5 w-5", statusIcon[status])} />
+    <div className={cn(
+      "rounded-lg border bg-card p-4 border-l-[3px] transition-shadow hover:shadow-md",
+      statusBorder[status],
+      accent && "bg-gradient-to-br from-card to-accent/30"
+    )}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+        <Icon className={cn("h-4 w-4", statusIcon[status])} strokeWidth={1.5} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="text-2xl font-bold tracking-tight mt-0.5">{value}</p>
-        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-      </div>
-    </Card>
+      <p className="text-2xl font-bold tracking-tight leading-none">{value}</p>
+      {subtitle && <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">{subtitle}</p>}
+    </div>
   );
 }
