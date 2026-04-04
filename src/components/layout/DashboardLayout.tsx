@@ -8,6 +8,8 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
