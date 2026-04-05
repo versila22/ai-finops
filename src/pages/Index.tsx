@@ -10,16 +10,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Wallet, Receipt, AlertTriangle, TrendingDown, TrendingUp, Battery, Bell, Sparkles, ArrowRight, ShieldAlert,
 } from "lucide-react";
-import {
-  providers, alerts, monthlyBudget, totalSpend, totalPlanSpend, totalOverage,
-  activeAlertCount, underusedPlans, nearExhaustion, overageProviders, potentialSavings,
-} from "@/data/mockData";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/i18n";
+import { useDashboard } from "@/hooks/use-api";
+import type { Provider, Alert } from "@/data/mockData";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const { data, isLoading } = useDashboard();
+
+  const providers: Provider[] = data?.providers ?? [];
+  const alerts: Alert[] = data?.alerts ?? [];
+  const kpis = data?.kpis;
+
+  const monthlyBudget = kpis?.monthlyBudget ?? 0;
+  const totalSpend = kpis?.totalSpend ?? 0;
+  const totalPlanSpend = kpis?.totalPlanSpend ?? 0;
+  const totalOverage = kpis?.totalOverage ?? 0;
+  const activeAlertCount = kpis?.activeAlertCount ?? 0;
+  const potentialSavings = kpis?.potentialSavings ?? 0;
+
+  const underusedPlans = providers.filter((p) => p.usagePercent < 30);
+  const nearExhaustion = providers.filter((p) => p.usagePercent >= 80 && p.usagePercent <= 100);
+  const overageProviders = providers.filter((p) => p.overage > 0);
+
   const activeAlertsList = alerts.filter((a) => a.status === "active").slice(0, 3);
   const actionableRecs = providers.filter((p) => p.recommendation !== "maintain");
 
@@ -27,6 +42,16 @@ const Dashboard = () => {
   const overspendingProviders = providers.filter(p => p.overage > 0);
   const optimizableProviders = providers.filter(p => p.usagePercent < 30);
   const healthyProviders = providers.filter(p => p.usagePercent >= 30 && p.usagePercent <= 80 && p.overage === 0);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -46,7 +71,7 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
           <KPICard title={t.kpiMonthlyBudget} value={`€${monthlyBudget}`} icon={Wallet} status="info" accent />
-          <KPICard title={t.kpiTotalSpend} value={`€${totalSpend}`} subtitle={`${Math.round((totalSpend / monthlyBudget) * 100)}% ${t.ofBudget}`} icon={Receipt} status={totalSpend > monthlyBudget ? "critical" : "healthy"} />
+          <KPICard title={t.kpiTotalSpend} value={`€${totalSpend}`} subtitle={`${Math.round((totalSpend / (monthlyBudget || 1)) * 100)}% ${t.ofBudget}`} icon={Receipt} status={totalSpend > monthlyBudget ? "critical" : "healthy"} />
           <KPICard title={t.kpiOverageCost} value={totalOverage > 0 ? `€${totalOverage}` : "€0"} subtitle={overageProviders.length > 0 ? `${overageProviders.length} ${t.provider}` : t.noOverages} icon={AlertTriangle} status={totalOverage > 0 ? "critical" : "healthy"} />
           <KPICard title={t.kpiActiveAlerts} value={activeAlertCount} subtitle={`${activeAlertCount} ${t.requireAttention}`} icon={Bell} status={activeAlertCount > 3 ? "critical" : activeAlertCount > 0 ? "warning" : "healthy"} />
           <KPICard title={t.kpiUnderused} value={underusedPlans.length} subtitle={underusedPlans.length > 0 ? underusedPlans.map(p => p.name).join(", ") : t.allPlansUtilized} icon={TrendingDown} status={underusedPlans.length > 0 ? "warning" : "healthy"} />

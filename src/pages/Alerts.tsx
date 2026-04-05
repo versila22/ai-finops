@@ -1,7 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { alerts } from "@/data/mockData";
+import type { Alert } from "@/data/mockData";
+import { useAlerts } from "@/hooks/use-api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bell, CheckCircle } from "lucide-react";
@@ -9,10 +10,12 @@ import { useI18n } from "@/i18n";
 
 const Alerts = () => {
   const { t } = useI18n();
+  const { data, isLoading } = useAlerts();
+  const alerts = data ?? [];
   const activeAlerts = alerts.filter((a) => a.status === "active");
   const resolvedAlerts = alerts.filter((a) => a.status === "resolved");
 
-  const AlertTable = ({ items }: { items: typeof alerts }) => (
+  const AlertTable = ({ items }: { items: Alert[] }) => (
     <Table>
       <TableHeader>
         <TableRow>
@@ -44,6 +47,16 @@ const Alerts = () => {
       </TableBody>
     </Table>
   );
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

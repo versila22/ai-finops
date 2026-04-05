@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { adjustments, providers } from "@/data/mockData";
+import { useAdjustments, useProviders } from "@/hooks/use-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import { useI18n } from "@/i18n";
 const Adjustments = () => {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
+  const { data: adjustments = [] } = useAdjustments();
+  const { data: providers = [] } = useProviders();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,12 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
-import { providers } from "@/data/mockData";
 import { useI18n } from "@/i18n";
+import { useProviders } from "@/hooks/use-api";
 import { TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
 
 const Plans = () => {
   const { t, locale } = useI18n();
+  const { data, isLoading } = useProviders();
+  const providers = data ?? [];
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

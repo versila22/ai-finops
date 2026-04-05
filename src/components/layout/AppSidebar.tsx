@@ -19,13 +19,15 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { activeAlertCount } from "@/data/mockData";
 import { useI18n } from "@/i18n";
+import { useDashboard } from "@/hooks/use-api";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { t } = useI18n();
+  const { data: dashboardData } = useDashboard();
+  const activeAlertCount = dashboardData?.kpis?.activeAlertCount ?? 0;
 
   const navItems = [
     { title: t.navCockpit, url: "/", icon: LayoutDashboard },

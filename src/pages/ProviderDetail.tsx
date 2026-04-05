@@ -5,8 +5,8 @@ import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { RadialProgress } from "@/components/dashboard/RadialProgress";
 import { RecommendationCard } from "@/components/dashboard/RecommendationCard";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
-import { providers, alerts, adjustments, generateDailyUsage } from "@/data/mockData";
 import { useParams, useNavigate } from "react-router-dom";
+import { useProvider } from "@/hooks/use-api";
 import { ArrowLeft, Clock, RefreshCw, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -16,7 +16,19 @@ const ProviderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, locale } = useI18n();
-  const provider = providers.find((p) => p.id === id);
+  const { data, isLoading } = useProvider(id ?? "");
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const provider = data ?? null;
 
   if (!provider) {
     return (
@@ -28,9 +40,9 @@ const ProviderDetail = () => {
     );
   }
 
-  const providerAlerts = alerts.filter((a) => a.providerId === id && a.status === "active");
-  const providerAdjustments = adjustments.filter((a) => a.providerId === id);
-  const dailyUsage = generateDailyUsage(id!);
+  const providerAlerts = (data?.alerts ?? []).filter((a) => a.status === "active");
+  const providerAdjustments = data?.adjustments ?? [];
+  const dailyUsage = data?.dailyUsage ?? [];
 
   const trendIcon = provider.trend === "up"
     ? <TrendingUp className="h-3.5 w-3.5 text-status-warning" />
