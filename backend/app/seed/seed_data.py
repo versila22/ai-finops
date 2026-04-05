@@ -9,7 +9,7 @@ from app.models.provider import Provider
 from app.models.settings import Settings
 
 # Seed version — bump this to force a re-seed when data changes
-SEED_VERSION = "2"
+SEED_VERSION = "3"
 
 
 def _get_reset_date() -> tuple[str, int]:
@@ -80,20 +80,20 @@ def seed():
             projected_end_of_cycle=0,
             trend="stable",
         ),
-        # 2. Anthropic - Pro ($20/mo) + API credits (~$50/mo) = $70/mo total. Manual.
+        # 2. Anthropic - API credits with auto-reload $30. Manual.
         Provider(
             id="anthropic",
             name="Anthropic",
             logo="A",
             category="LLM / API",
-            plan="Pro + API Credits",
+            plan="API Credits (auto-reload $30)",
             plan_type="monthly_quota",
-            monthly_cost=70,          # $20 Pro + ~$50 API
-            included_quota=5_000_000,
-            quota_unit="tokens",
-            consumed=0,
-            remaining=5_000_000,
-            usage_percent=0,
+            monthly_cost=30,
+            included_quota=30,
+            quota_unit="USD",
+            consumed=23.36,
+            remaining=6.64,
+            usage_percent=78,
             overage=0,
             reset_date=reset_date,
             days_until_reset=days_until_reset,
@@ -161,19 +161,19 @@ def seed():
             projected_end_of_cycle=0,
             trend="stable",
         ),
-        # 5. Lovable - Pro plan ($20/mo, 100 credits/mo). Manual.
+        # 5. Lovable - Pro 1 plan (25€/mo, 100 monthly + 5 daily + rollover credits).
         Provider(
             id="lovable",
             name="Lovable",
             logo="L",
             category="AI Dev Platform",
-            plan="Pro",
+            plan="Pro 1",
             plan_type="monthly_quota",
-            monthly_cost=20,
-            included_quota=100,
+            monthly_cost=25,
+            included_quota=187.3,
             quota_unit="credits",
             consumed=0,
-            remaining=100,
+            remaining=187.3,
             usage_percent=0,
             overage=0,
             reset_date=reset_date,
@@ -194,10 +194,10 @@ def seed():
     # --- Plans ---
     plans = [
         Plan(id="p1", provider_id="openai", provider_name="OpenAI", name="API Pay-as-you-go", plan_type="monthly_quota", monthly_cost=0, included_quota=0, quota_unit="USD"),
-        Plan(id="p2", provider_id="anthropic", provider_name="Anthropic", name="Pro + API Credits", plan_type="monthly_quota", monthly_cost=70, included_quota=5_000_000, quota_unit="tokens"),
+        Plan(id="p2", provider_id="anthropic", provider_name="Anthropic", name="API Credits (auto-reload $30)", plan_type="monthly_quota", monthly_cost=30, included_quota=30, quota_unit="USD"),
         Plan(id="p3", provider_id="google", provider_name="Google / Gemini", name="One AI Premium", plan_type="monthly_quota", monthly_cost=21.99, included_quota=1000, quota_unit="credits"),
         Plan(id="p4", provider_id="elevenlabs", provider_name="ElevenLabs", name="Creator", plan_type="monthly_quota", monthly_cost=22, included_quota=100_000, quota_unit="characters"),
-        Plan(id="p5", provider_id="lovable", provider_name="Lovable", name="Pro", plan_type="monthly_quota", monthly_cost=20, included_quota=100, quota_unit="credits"),
+        Plan(id="p5", provider_id="lovable", provider_name="Lovable", name="Pro 1", plan_type="monthly_quota", monthly_cost=25, included_quota=187.3, quota_unit="credits"),
     ]
     db.add_all(plans)
 

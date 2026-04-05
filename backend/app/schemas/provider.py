@@ -55,8 +55,18 @@ class ProviderDetailResponse(BaseModel):
 class ProviderUpdate(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    consumed: Optional[float] = None
+    name: Optional[str] = None
+    plan: Optional[str] = None
     monthly_cost: Optional[float] = None
+    included_quota: Optional[float] = None
+    quota_unit: Optional[str] = None
+    consumed: Optional[float] = None
+    remaining: Optional[float] = None
+    usage_percent: Optional[float] = None
     overage: Optional[float] = None
     sync_status: Optional[str] = None
     data_origin: Optional[str] = None
+    recommendation: Optional[str] = None
+    recommendation_text: Optional[str] = None
+    recommendation_detail: Optional[str] = None
+    urgency: Optional[str] = None
