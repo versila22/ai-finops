@@ -46,7 +46,7 @@ def seed():
     db.query(Alert).delete()
     db.query(Plan).delete()
     db.query(Provider).delete()
-    db.query(SettingsModel).delete()
+    db.query(Settings).delete()
     db.commit()
 
     reset_date, days_until_reset = _get_reset_date()
