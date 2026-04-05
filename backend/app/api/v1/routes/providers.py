@@ -8,6 +8,7 @@ from app.models.adjustment import ManualAdjustment
 from app.schemas.provider import ProviderResponse, ProviderDetailResponse, ProviderUpdate
 from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse
 from app.services.dashboard_service import generate_daily_usage
+from app.services.sync import sync_all_providers, sync_provider_by_id
 
 router = APIRouter()
 
@@ -54,3 +55,29 @@ def update_provider(provider_id: str, update: ProviderUpdate, db: Session = Depe
     db.commit()
     db.refresh(provider)
     return ProviderResponse.model_validate(provider)
+
+
+@router.post("/sync")
+async def sync_all(db: Session = Depends(get_db)):
+    """Trigger sync for all auto-sync providers (OpenAI, ElevenLabs)."""
+    results = await sync_all_providers(db)
+    providers = db.query(Provider).all()
+    return {
+        "sync_results": results,
+        "providers": [ProviderResponse.model_validate(p).model_dump(by_alias=True) for p in providers],
+    }
+
+
+@router.post("/providers/{provider_id}/sync")
+async def sync_provider(provider_id: str, db: Session = Depends(get_db)):
+    """Trigger sync for a specific provider."""
+    provider = db.query(Provider).filter_by(id=provider_id).first()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    result = await sync_provider_by_id(provider_id, db)
+    db.refresh(provider)
+    return {
+        "sync_result": result,
+        "provider": ProviderResponse.model_validate(provider).model_dump(by_alias=True),
+    }

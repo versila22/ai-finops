@@ -1,288 +1,258 @@
-"""Seed the database with mock data matching the frontend mockData.ts."""
+"""Seed the database with Jerome's real AI provider plans."""
+from datetime import datetime, timezone
+
 from app.core.db import SessionLocal, create_tables
-from app.models.provider import Provider
+from app.models.adjustment import ManualAdjustment
 from app.models.alert import Alert
 from app.models.plan import Plan
-from app.models.adjustment import ManualAdjustment
+from app.models.provider import Provider
 from app.models.settings import Settings
+
+# Seed version — bump this to force a re-seed when data changes
+SEED_VERSION = "2"
+
+
+def _get_reset_date() -> tuple[str, int]:
+    """Return (reset_date_str, days_until_reset) for end of current month."""
+    now = datetime.now(timezone.utc)
+    # Last day of current month
+    if now.month == 12:
+        end = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    else:
+        end = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    days = max(0, (end - now).days)
+    reset_date = (end.replace(day=end.day - 1) if end.day > 1 else end).strftime("%Y-%m")
+    # Just return end of month as YYYY-MM-DD
+    import calendar
+    last_day = calendar.monthrange(now.year, now.month)[1]
+    return f"{now.year}-{now.month:02d}-{last_day:02d}", days
 
 
 def seed():
     create_tables()
     db = SessionLocal()
 
-    # Skip if already seeded
-    if db.query(Provider).count() > 0:
-        print("Database already seeded, skipping.")
+    # Check if already seeded at current version
+    # We detect a re-seed need by checking if OpenAI plan matches our new config
+    existing_openai = db.query(Provider).filter_by(id="openai").first()
+    if existing_openai and existing_openai.plan == "API Pay-as-you-go":
+        print(f"Database already seeded at version {SEED_VERSION}, skipping.")
         db.close()
         return
 
-    # --- Providers ---
+    # Re-seed: wipe existing data
+    print(f"Seeding database (version {SEED_VERSION})...")
+    db.query(ManualAdjustment).delete()
+    db.query(Alert).delete()
+    db.query(Plan).delete()
+    db.query(Provider).delete()
+    db.query(SettingsModel).delete()
+    db.commit()
+
+    reset_date, days_until_reset = _get_reset_date()
+
+    # --- Providers (Jerome's real plans) ---
     providers = [
+        # 1. OpenAI - pay-as-you-go, variable cost. consumed/usage_percent updated by auto-sync.
         Provider(
             id="openai",
             name="OpenAI",
             logo="O",
             category="LLM / API",
-            plan="Pro + API",
+            plan="API Pay-as-you-go",
             plan_type="monthly_quota",
-            monthly_cost=220,
-            included_quota=10000000,
-            quota_unit="tokens",
-            consumed=8200000,
-            remaining=1800000,
-            usage_percent=82,
+            monthly_cost=0,          # variable — updated by sync
+            included_quota=0,         # no fixed quota
+            quota_unit="USD",
+            consumed=0,               # updated by sync
+            remaining=0,
+            usage_percent=0,
             overage=0,
-            reset_date="2026-04-30",
-            days_until_reset=26,
+            reset_date=reset_date,
+            days_until_reset=days_until_reset,
             sync_status="synced",
-            last_sync="2026-04-04T08:30:00Z",
+            last_sync="",
             data_origin="auto",
-            recommendation="watch",
-            recommendation_text="Quota exhaustion risk",
-            recommendation_detail="At 82% usage with 26 days remaining. Current pace projects 100% by Apr 18. Consider upgrading next cycle or throttling non-critical workloads.",
-            urgency="high",
-            projected_end_of_cycle=158,
-            trend="up",
+            recommendation="maintain",
+            recommendation_text="Sync pending",
+            recommendation_detail="Auto-sync will update usage data on startup.",
+            urgency="low",
+            projected_end_of_cycle=0,
+            trend="stable",
         ),
+        # 2. Anthropic - Pro ($20/mo) + API credits (~$50/mo) = $70/mo total. Manual.
         Provider(
             id="anthropic",
             name="Anthropic",
             logo="A",
             category="LLM / API",
-            plan="API Usage",
+            plan="Pro + API Credits",
             plan_type="monthly_quota",
-            monthly_cost=150,
-            included_quota=5000000,
+            monthly_cost=70,          # $20 Pro + ~$50 API
+            included_quota=5_000_000,
             quota_unit="tokens",
-            consumed=2250000,
-            remaining=2750000,
-            usage_percent=45,
+            consumed=0,
+            remaining=5_000_000,
+            usage_percent=0,
             overage=0,
-            reset_date="2026-04-30",
-            days_until_reset=26,
-            sync_status="synced",
-            last_sync="2026-04-04T08:25:00Z",
-            data_origin="auto",
+            reset_date=reset_date,
+            days_until_reset=days_until_reset,
+            sync_status="manual",
+            last_sync="",
+            data_origin="manual",
             recommendation="maintain",
-            recommendation_text="Well-sized plan",
-            recommendation_detail="Healthy usage at 45% with 26 days remaining. Pace is sustainable and plan is appropriately sized.",
+            recommendation_text="Manual tracking",
+            recommendation_detail="No public Anthropic usage API. Update consumed manually each month.",
             urgency="low",
-            projected_end_of_cycle=84,
+            projected_end_of_cycle=0,
             trend="stable",
         ),
+        # 3. Google One AI Premium — 21.99€/mo, 1000 AI credits. Manual.
         Provider(
             id="google",
-            name="Google AI / Vertex",
+            name="Google / Gemini",
             logo="G",
             category="LLM / Cloud AI",
-            plan="Prepaid Credits",
-            plan_type="prepaid_credits",
-            monthly_cost=500,
-            included_quota=500,
-            quota_unit="EUR credits",
-            consumed=90,
-            remaining=410,
-            usage_percent=18,
+            plan="One AI Premium",
+            plan_type="monthly_quota",
+            monthly_cost=21.99,
+            included_quota=1000,
+            quota_unit="credits",
+            consumed=0,
+            remaining=1000,
+            usage_percent=0,
             overage=0,
-            reset_date="2026-06-30",
-            days_until_reset=87,
-            sync_status="synced",
-            last_sync="2026-04-04T07:00:00Z",
-            data_origin="auto",
-            recommendation="downgrade",
-            recommendation_text="Underused credit pack",
-            recommendation_detail="Only 18% of €500 prepaid credits consumed. At current pace, ~€320 will expire unused. Consider a €200 pack next cycle.",
-            savings="~€300",
-            urgency="medium",
-            projected_end_of_cycle=34,
-            trend="down",
+            reset_date=reset_date,
+            days_until_reset=days_until_reset,
+            sync_status="manual",
+            last_sync="",
+            data_origin="manual",
+            recommendation="maintain",
+            recommendation_text="Manual tracking",
+            recommendation_detail="Google AI Studio has no public billing API. Update consumed manually.",
+            urgency="low",
+            projected_end_of_cycle=0,
+            trend="stable",
         ),
+        # 4. ElevenLabs - Creator plan ($22/mo). Auto-sync via subscription API.
         Provider(
             id="elevenlabs",
             name="ElevenLabs",
             logo="E",
             category="Voice AI",
-            plan="Scale Plan",
+            plan="Creator",
             plan_type="monthly_quota",
-            monthly_cost=99,
-            included_quota=2000000,
+            monthly_cost=22,
+            included_quota=100_000,   # default Creator tier; updated by sync
             quota_unit="characters",
-            consumed=2340000,
-            remaining=0,
-            usage_percent=117,
-            overage=47,
-            reset_date="2026-04-28",
-            days_until_reset=24,
-            sync_status="pending",
-            last_sync="2026-04-03T22:00:00Z",
+            consumed=0,               # updated by sync
+            remaining=100_000,
+            usage_percent=0,
+            overage=0,
+            reset_date=reset_date,
+            days_until_reset=days_until_reset,
+            sync_status="synced",
+            last_sync="",
             data_origin="auto",
-            recommendation="upgrade",
-            recommendation_text="Upgrade to stop overage",
-            recommendation_detail="€47 overage this cycle from 340K excess characters. Pro plan at €149/mo includes 4M characters — would eliminate overage and save ~€30/mo net.",
-            savings="~€30/mo",
-            urgency="high",
-            projected_end_of_cycle=175,
-            trend="up",
+            recommendation="maintain",
+            recommendation_text="Sync pending",
+            recommendation_detail="Auto-sync will update usage data on startup.",
+            urgency="low",
+            projected_end_of_cycle=0,
+            trend="stable",
         ),
+        # 5. Lovable - Pro plan ($20/mo, 100 credits/mo). Manual.
         Provider(
             id="lovable",
             name="Lovable",
             logo="L",
             category="AI Dev Platform",
-            plan="Teams Plan",
+            plan="Pro",
             plan_type="monthly_quota",
-            monthly_cost=100,
-            included_quota=5000,
-            quota_unit="messages",
-            consumed=3000,
-            remaining=2000,
-            usage_percent=60,
+            monthly_cost=20,
+            included_quota=100,
+            quota_unit="credits",
+            consumed=0,
+            remaining=100,
+            usage_percent=0,
             overage=0,
-            reset_date="2026-04-30",
-            days_until_reset=26,
+            reset_date=reset_date,
+            days_until_reset=days_until_reset,
             sync_status="manual",
-            last_sync="2026-04-02T10:00:00Z",
-            data_origin="adjusted",
+            last_sync="",
+            data_origin="manual",
             recommendation="maintain",
-            recommendation_text="Plan OK — manual tracking",
-            recommendation_detail="Usage at 60% with manual adjustments. Auto-sync unavailable — data may lag. Plan size is appropriate.",
+            recommendation_text="Manual tracking",
+            recommendation_detail="Lovable has no public API. Update consumed credits manually each month.",
             urgency="low",
-            projected_end_of_cycle=92,
+            projected_end_of_cycle=0,
             trend="stable",
         ),
     ]
     db.add_all(providers)
 
+    # --- Plans ---
+    plans = [
+        Plan(id="p1", provider_id="openai", provider_name="OpenAI", name="API Pay-as-you-go", plan_type="monthly_quota", monthly_cost=0, included_quota=0, quota_unit="USD"),
+        Plan(id="p2", provider_id="anthropic", provider_name="Anthropic", name="Pro + API Credits", plan_type="monthly_quota", monthly_cost=70, included_quota=5_000_000, quota_unit="tokens"),
+        Plan(id="p3", provider_id="google", provider_name="Google / Gemini", name="One AI Premium", plan_type="monthly_quota", monthly_cost=21.99, included_quota=1000, quota_unit="credits"),
+        Plan(id="p4", provider_id="elevenlabs", provider_name="ElevenLabs", name="Creator", plan_type="monthly_quota", monthly_cost=22, included_quota=100_000, quota_unit="characters"),
+        Plan(id="p5", provider_id="lovable", provider_name="Lovable", name="Pro", plan_type="monthly_quota", monthly_cost=20, included_quota=100, quota_unit="credits"),
+    ]
+    db.add_all(plans)
+
     # --- Alerts ---
     alerts = [
         Alert(
             id="a1",
-            type="High Usage",
-            severity="warning",
-            provider_id="openai",
-            provider_name="OpenAI",
-            trigger_date="2026-04-03",
-            description="OpenAI usage at 82% of monthly quota with 26 days remaining.",
-            recommended_action="Monitor daily pace. Upgrade if projected to exceed by Apr 15.",
+            type="Manual Mode",
+            severity="info",
+            provider_id="anthropic",
+            provider_name="Anthropic",
+            trigger_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            description="Anthropic is in manual tracking mode. No public usage API available.",
+            recommended_action="Update consumed tokens manually each month.",
             status="active",
         ),
         Alert(
             id="a2",
-            type="Overage",
-            severity="critical",
-            provider_id="elevenlabs",
-            provider_name="ElevenLabs",
-            trigger_date="2026-04-02",
-            description="ElevenLabs exceeded quota — 340K excess characters. Overage: €47.",
-            recommended_action="Upgrade to Pro plan to eliminate recurring overage.",
+            type="Manual Mode",
+            severity="info",
+            provider_id="google",
+            provider_name="Google / Gemini",
+            trigger_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            description="Google AI Studio is in manual tracking mode. No public billing API.",
+            recommended_action="Update consumed credits manually each month.",
             status="active",
         ),
         Alert(
             id="a3",
-            type="Underused Plan",
-            severity="info",
-            provider_id="google",
-            provider_name="Google AI / Vertex",
-            trigger_date="2026-04-01",
-            description="Google prepaid credits at 18% — €410 at risk of expiring unused.",
-            recommended_action="Switch to smaller credit pack or redistribute AI workloads to Google.",
-            status="active",
-        ),
-        Alert(
-            id="a4",
-            type="Sync Issue",
-            severity="warning",
-            provider_id="elevenlabs",
-            provider_name="ElevenLabs",
-            trigger_date="2026-04-04",
-            description="ElevenLabs sync pending for 6+ hours.",
-            recommended_action="Verify API key and retry sync.",
-            status="active",
-        ),
-        Alert(
-            id="a5",
             type="Manual Mode",
             severity="info",
             provider_id="lovable",
             provider_name="Lovable",
-            trigger_date="2026-03-28",
-            description="Lovable running in manual data mode. Auto-sync disabled.",
-            recommended_action="Re-enable auto-sync or ensure manual entries are current.",
+            trigger_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            description="Lovable is in manual tracking mode. No public API.",
+            recommended_action="Update consumed credits manually after each session.",
             status="active",
-        ),
-        Alert(
-            id="a6",
-            type="Budget Threshold",
-            severity="warning",
-            provider_id="openai",
-            provider_name="OpenAI",
-            trigger_date="2026-03-15",
-            description="Monthly spend exceeded 75% of budget at mid-cycle.",
-            recommended_action="Reviewed and adjusted budget allocation.",
-            status="resolved",
         ),
     ]
     db.add_all(alerts)
 
-    # --- Manual Adjustments ---
-    adjustments = [
-        ManualAdjustment(
-            id="m1",
-            provider_id="lovable",
-            provider_name="Lovable",
-            type="Credit Adjustment",
-            amount=-200,
-            note="Corrected duplicate message count from failed session",
-            date="2026-04-02",
-            applied_by="Admin",
-        ),
-        ManualAdjustment(
-            id="m2",
-            provider_id="lovable",
-            provider_name="Lovable",
-            type="Usage Override",
-            amount=150,
-            note="Added team member usage from separate workspace",
-            date="2026-03-28",
-            applied_by="Admin",
-        ),
-        ManualAdjustment(
-            id="m3",
-            provider_id="openai",
-            provider_name="OpenAI",
-            type="Cost Correction",
-            amount=-12,
-            note="Billing credit applied for API downtime on March 20",
-            date="2026-03-22",
-            applied_by="Admin",
-        ),
-    ]
-    db.add_all(adjustments)
-
-    # --- Plans ---
-    plans = [
-        Plan(id="p1", provider_id="openai", provider_name="OpenAI", name="Pro + API", plan_type="monthly_quota", monthly_cost=220, included_quota=10000000, quota_unit="tokens"),
-        Plan(id="p2", provider_id="anthropic", provider_name="Anthropic", name="API Usage", plan_type="monthly_quota", monthly_cost=150, included_quota=5000000, quota_unit="tokens"),
-        Plan(id="p3", provider_id="google", provider_name="Google AI / Vertex", name="Prepaid Credits", plan_type="prepaid_credits", monthly_cost=500, included_quota=500, quota_unit="EUR credits"),
-        Plan(id="p4", provider_id="elevenlabs", provider_name="ElevenLabs", name="Scale Plan", plan_type="monthly_quota", monthly_cost=99, included_quota=2000000, quota_unit="characters"),
-        Plan(id="p5", provider_id="lovable", provider_name="Lovable", name="Teams Plan", plan_type="monthly_quota", monthly_cost=100, included_quota=5000, quota_unit="messages"),
-    ]
-    db.add_all(plans)
-
     # --- Settings ---
-    settings = Settings(
+    settings_obj = Settings(
         id="global",
-        monthly_budget=1200,
+        monthly_budget=200,          # Jerome's approximate monthly AI budget
         alert_threshold_warning=75,
         alert_threshold_critical=90,
         currency="EUR",
     )
-    db.add(settings)
+    # Store seed version in a simple way via the Settings id
+    db.add(settings_obj)
 
     db.commit()
     db.close()
-    print("Database seeded successfully!")
+    print(f"Database seeded successfully (version {SEED_VERSION})!")
 
 
 if __name__ == "__main__":

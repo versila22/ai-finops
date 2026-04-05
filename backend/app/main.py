@@ -1,13 +1,32 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.db import create_tables
+from app.core.db import SessionLocal, create_tables
 from app.seed.seed_data import seed
-
 from app.api.v1.routes import health, dashboard, providers, settings as settings_routes
+
+logger = logging.getLogger(__name__)
+
+
+async def _background_sync():
+    """Run a sync for auto-sync providers in the background after startup."""
+    try:
+        # Small delay to let startup complete
+        await asyncio.sleep(2)
+        from app.services.sync import sync_all_providers
+        db = SessionLocal()
+        try:
+            results = await sync_all_providers(db)
+            logger.info(f"Background startup sync results: {results}")
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Background sync failed: {e}")
 
 
 @asynccontextmanager
@@ -15,6 +34,8 @@ async def lifespan(app: FastAPI):
     # Startup: create tables and seed
     create_tables()
     seed()
+    # Non-blocking background sync
+    asyncio.create_task(_background_sync())
     yield
 
 

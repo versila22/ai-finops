@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: ai-finops-backend
     restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
       - CORS_ORIGINS=["https://ai-finops.lovable.app","https://ai-finops-api.duckdns.org","http://localhost:5173"]
       - DATABASE_URL=sqlite:///./finops.db
