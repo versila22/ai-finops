@@ -3,9 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProviders } from "@/hooks/use-api";
 import { useI18n } from "@/i18n";
+import type { Provider } from "@/data/mockData";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -13,9 +14,29 @@ import {
 
 const Providers = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeFilter = searchParams.get("filter");
   const { t, locale } = useI18n();
   const { data, isLoading } = useProviders();
   const providers = data ?? [];
+
+  const filteredProviders = providers.filter((provider) => {
+    if (activeFilter === "underused") return provider.usagePercent < 30;
+    if (activeFilter === "exhaustion") return provider.usagePercent >= 80 || provider.projectedEndOfCycle >= 100;
+    return true;
+  });
+
+  const filterTitle = activeFilter === "underused"
+    ? t.providersFilterUnderused
+    : activeFilter === "exhaustion"
+    ? t.providersFilterExhaustion
+    : null;
+
+  const renderTrend = (provider: Provider) => {
+    if (provider.trend === "up") return <TrendingUp className="inline h-3.5 w-3.5 text-status-warning" />;
+    if (provider.trend === "down") return <TrendingDown className="inline h-3.5 w-3.5 text-status-info" />;
+    return <Minus className="inline h-3.5 w-3.5 text-muted-foreground" />;
+  };
 
   if (isLoading) {
     return (
@@ -33,8 +54,13 @@ const Providers = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t.providersTitle}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t.providersSubtitle(providers.length, providers.filter(p => p.syncStatus === "synced").length, providers.filter(p => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length)}
+            {t.providersSubtitle(providers.length, providers.filter((p) => p.syncStatus === "synced").length, providers.filter((p) => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length)}
           </p>
+          {filterTitle && (
+            <div className="mt-3 inline-flex rounded-md border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+              {filterTitle}: {filteredProviders.length}
+            </div>
+          )}
         </div>
 
         <Card>
@@ -57,7 +83,7 @@ const Providers = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {providers.map((p) => (
+                {filteredProviders.map((p) => (
                   <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/providers/${p.id}`)}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
@@ -83,9 +109,7 @@ const Providers = () => {
                       {p.overage > 0 ? <span className="font-bold text-status-critical tabular-nums">€{p.overage}</span> : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell className="text-center">
-                      {p.trend === "up" && <TrendingUp className="inline h-3.5 w-3.5 text-status-warning" />}
-                      {p.trend === "down" && <TrendingDown className="inline h-3.5 w-3.5 text-status-info" />}
-                      {p.trend === "stable" && <Minus className="inline h-3.5 w-3.5 text-muted-foreground" />}
+                      {renderTrend(p)}
                     </TableCell>
                     <TableCell className="text-right">
                       <span className={`text-sm font-semibold tabular-nums ${p.projectedEndOfCycle > 100 ? "text-status-critical" : p.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>

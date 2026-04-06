@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -7,13 +8,88 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bell, CheckCircle } from "lucide-react";
 import { useI18n } from "@/i18n";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { syncProvider } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getProviderBillingUrl } from "@/config/providerBilling";
 
 const Alerts = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const selectedFilter = searchParams.get("filter");
   const { data, isLoading } = useAlerts();
   const alerts = data ?? [];
-  const activeAlerts = alerts.filter((a) => a.status === "active");
+
+  const retrySyncMutation = useMutation({
+    mutationFn: (providerId: string) => syncProvider(providerId),
+    onSuccess: () => {
+      toast.success(t.alertRetrySyncSuccess);
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["providers"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t.alertRetrySyncError);
+    },
+  });
+
+  const activeAlerts = useMemo(() => {
+    const active = alerts.filter((a) => a.status === "active");
+    if (selectedFilter === "overage") {
+      return active.filter((a) => a.type.toLowerCase().includes("overage"));
+    }
+    return active;
+  }, [alerts, selectedFilter]);
+
   const resolvedAlerts = alerts.filter((a) => a.status === "resolved");
+
+  const renderAction = (alert: Alert) => {
+    const type = alert.type.toLowerCase();
+    const billingUrl = getProviderBillingUrl(alert.providerId);
+
+    if (type.includes("overage") && billingUrl) {
+      return (
+        <Button size="sm" variant="outline" asChild>
+          <a href={billingUrl} target="_blank" rel="noreferrer">{t.alertViewSubscription}</a>
+        </Button>
+      );
+    }
+
+    if (type.includes("high usage")) {
+      return (
+        <Button size="sm" variant="outline" onClick={() => navigate(`/providers/${alert.providerId}`)}>
+          {t.alertViewUsage}
+        </Button>
+      );
+    }
+
+    if (type.includes("underused")) {
+      return (
+        <Button size="sm" variant="outline" onClick={() => navigate(`/providers/${alert.providerId}?section=subscription`)}>
+          {t.alertOptimize}
+        </Button>
+      );
+    }
+
+    if (type.includes("sync issue")) {
+      return (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => retrySyncMutation.mutate(alert.providerId)}
+          disabled={retrySyncMutation.isPending}
+        >
+          {t.alertRetrySync}
+        </Button>
+      );
+    }
+
+    return <span className="text-xs text-muted-foreground">{alert.recommendedAction}</span>;
+  };
 
   const AlertTable = ({ items }: { items: Alert[] }) => (
     <Table>
@@ -25,12 +101,13 @@ const Alerts = () => {
           <TableHead>{t.thDate}</TableHead>
           <TableHead className="max-w-[300px]">{t.thDescription}</TableHead>
           <TableHead className="max-w-[250px]">{t.thRecommendedAction}</TableHead>
+          <TableHead className="w-[180px]">{t.thActionButton}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">{t.noAlertsToDisplay}</TableCell>
+            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">{t.noAlertsToDisplay}</TableCell>
           </TableRow>
         ) : (
           items.map((a) => (
@@ -41,6 +118,7 @@ const Alerts = () => {
               <TableCell className="text-xs text-muted-foreground tabular-nums">{a.triggerDate}</TableCell>
               <TableCell className="text-xs max-w-[300px] leading-relaxed">{a.description}</TableCell>
               <TableCell className="text-xs text-muted-foreground max-w-[250px] leading-relaxed">{a.recommendedAction}</TableCell>
+              <TableCell>{renderAction(a)}</TableCell>
             </TableRow>
           ))
         )}

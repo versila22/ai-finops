@@ -14,6 +14,27 @@ const en = {
   navPlans: "Plans",
   navAdjustments: "Adjustments",
 
+  // Auth
+  authLoginTitle: "Welcome back",
+  authLoginSubtitle: "Sign in to access your AI spend cockpit.",
+  authRegisterTitle: "Create your account",
+  authRegisterSubtitle: "Start tracking subscriptions, quotas, and alerts.",
+  authEmail: "Email",
+  authPassword: "Password",
+  authConfirmPassword: "Confirm password",
+  authLoginCta: "Sign in",
+  authRegisterCta: "Create account",
+  authSigningIn: "Signing in...",
+  authCreatingAccount: "Creating account...",
+  authNoAccount: "No account yet?",
+  authCreateAccount: "Create one",
+  authHaveAccount: "Already have an account?",
+  authLoginLink: "Sign in",
+  authPasswordsDoNotMatch: "Passwords do not match.",
+  authLoginFailed: "Unable to sign in.",
+  authRegisterFailed: "Unable to create account.",
+  authLogout: "Logout",
+
   // Dashboard
   dashTitle: "AI Spend Cockpit",
   dashSubtitle: (n: number) => `April 2026 · ${n} providers tracked`,
@@ -71,6 +92,8 @@ const en = {
   providersTitle: "Providers & Tools",
   providersSubtitle: (total: number, synced: number, manual: number) =>
     `${total} tracked · ${synced} synced · ${manual} manual`,
+  providersFilterUnderused: "Filtered: underused providers",
+  providersFilterExhaustion: "Filtered: near exhaustion providers",
   thProvider: "Provider",
   thPlan: "Plan",
   thCost: "Cost",
@@ -103,6 +126,14 @@ const en = {
   dataOrigin: "Data origin",
   projectedEndOfCycle: "Projected end-of-cycle",
   trendLabel: "Trend",
+  subscriptionSectionTitle: "Subscription details",
+  subscriptionPlan: "Current plan",
+  subscriptionSpend: "Monthly spend",
+  subscriptionQuota: "Included quota",
+  subscriptionManageLabel: "Manage this subscription",
+  subscriptionManageHelp: "Open the billing portal to review the plan, update payment settings, or change tiers.",
+  subscriptionManageCta: "Manage subscription",
+  subscriptionLinkUnavailable: "No billing link configured for this provider.",
 
   // Alerts page
   alertsTitle: "Alerts Center",
@@ -114,7 +145,14 @@ const en = {
   thDate: "Date",
   thDescription: "Description",
   thRecommendedAction: "Recommended Action",
+  thActionButton: "Quick action",
   noAlertsToDisplay: "No alerts to display",
+  alertViewSubscription: "View subscription",
+  alertViewUsage: "View usage",
+  alertOptimize: "Optimize",
+  alertRetrySync: "Retry sync",
+  alertRetrySyncSuccess: "Sync retried successfully.",
+  alertRetrySyncError: "Unable to retry sync.",
 
   // Plans page
   plansTitle: "Plans & Subscriptions",

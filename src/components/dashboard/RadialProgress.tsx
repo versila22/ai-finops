@@ -53,10 +53,10 @@ export function RadialProgress({ value, size = 80, strokeWidth = 7, className, l
           className={cn("transition-all duration-700 ease-out", color)}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
         <span className={cn("text-sm font-bold tabular-nums", color)}>{value}%</span>
+        {label && <span className="mt-0.5 text-[9px] font-medium leading-tight text-muted-foreground">{label}</span>}
       </div>
-      {label && <span className="text-[10px] text-muted-foreground mt-1 font-medium">{label}</span>}
     </div>
   );
 }

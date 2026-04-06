@@ -7,12 +7,14 @@ import { RadialProgress } from "@/components/dashboard/RadialProgress";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { SpendBar } from "@/components/dashboard/SpendBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Wallet, Receipt, AlertTriangle, TrendingDown, TrendingUp, Battery, Bell, Sparkles, ArrowRight, ShieldAlert,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/i18n";
 import { useDashboard } from "@/hooks/use-api";
+import { getProviderBillingUrl } from "@/config/providerBilling";
 import type { Provider, Alert } from "@/data/mockData";
 
 const Dashboard = () => {
@@ -38,10 +40,10 @@ const Dashboard = () => {
   const activeAlertsList = alerts.filter((a) => a.status === "active").slice(0, 3);
   const actionableRecs = providers.filter((p) => p.recommendation !== "maintain");
 
-  const atRiskProviders = providers.filter(p => p.projectedEndOfCycle > 100 && p.overage === 0);
-  const overspendingProviders = providers.filter(p => p.overage > 0);
-  const optimizableProviders = providers.filter(p => p.usagePercent < 30);
-  const healthyProviders = providers.filter(p => p.usagePercent >= 30 && p.usagePercent <= 80 && p.overage === 0);
+  const atRiskProviders = providers.filter((p) => p.projectedEndOfCycle > 100 && p.overage === 0);
+  const overspendingProviders = providers.filter((p) => p.overage > 0);
+  const optimizableProviders = providers.filter((p) => p.usagePercent < 30);
+  const healthyProviders = providers.filter((p) => p.usagePercent >= 30 && p.usagePercent <= 80 && p.overage === 0);
 
   if (isLoading) {
     return (
@@ -71,14 +73,13 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
           <KPICard title={t.kpiMonthlyBudget} value={`€${monthlyBudget}`} icon={Wallet} status="info" accent />
-          <KPICard title={t.kpiTotalSpend} value={`€${totalSpend}`} subtitle={`${Math.round((totalSpend / (monthlyBudget || 1)) * 100)}% ${t.ofBudget}`} icon={Receipt} status={totalSpend > monthlyBudget ? "critical" : "healthy"} />
-          <KPICard title={t.kpiOverageCost} value={totalOverage > 0 ? `€${totalOverage}` : "€0"} subtitle={overageProviders.length > 0 ? `${overageProviders.length} ${t.provider}` : t.noOverages} icon={AlertTriangle} status={totalOverage > 0 ? "critical" : "healthy"} />
-          <KPICard title={t.kpiActiveAlerts} value={activeAlertCount} subtitle={`${activeAlertCount} ${t.requireAttention}`} icon={Bell} status={activeAlertCount > 3 ? "critical" : activeAlertCount > 0 ? "warning" : "healthy"} />
-          <KPICard title={t.kpiUnderused} value={underusedPlans.length} subtitle={underusedPlans.length > 0 ? underusedPlans.map(p => p.name).join(", ") : t.allPlansUtilized} icon={TrendingDown} status={underusedPlans.length > 0 ? "warning" : "healthy"} />
-          <KPICard title={t.kpiNearExhaustion} value={nearExhaustion.length} subtitle={nearExhaustion.length > 0 ? nearExhaustion.map(p => p.name).join(", ") : t.noRisks} icon={Battery} status={nearExhaustion.length > 0 ? "warning" : "healthy"} />
+          <KPICard title={t.kpiTotalSpend} value={`€${totalSpend}`} subtitle={`${Math.round((totalSpend / (monthlyBudget || 1)) * 100)}% ${t.ofBudget}`} icon={Receipt} status={totalSpend > monthlyBudget ? "critical" : "healthy"} onClick={() => navigate("/providers")} />
+          <KPICard title={t.kpiOverageCost} value={totalOverage > 0 ? `€${totalOverage}` : "€0"} subtitle={overageProviders.length > 0 ? `${overageProviders.length} ${t.provider}` : t.noOverages} icon={AlertTriangle} status={totalOverage > 0 ? "critical" : "healthy"} onClick={() => navigate("/alerts?filter=overage")} />
+          <KPICard title={t.kpiActiveAlerts} value={activeAlertCount} subtitle={`${activeAlertCount} ${t.requireAttention}`} icon={Bell} status={activeAlertCount > 3 ? "critical" : activeAlertCount > 0 ? "warning" : "healthy"} onClick={() => navigate("/alerts")} />
+          <KPICard title={t.kpiUnderused} value={underusedPlans.length} subtitle={underusedPlans.length > 0 ? underusedPlans.map((p) => p.name).join(", ") : t.allPlansUtilized} icon={TrendingDown} status={underusedPlans.length > 0 ? "warning" : "healthy"} onClick={() => navigate("/providers?filter=underused")} />
+          <KPICard title={t.kpiNearExhaustion} value={nearExhaustion.length} subtitle={nearExhaustion.length > 0 ? nearExhaustion.map((p) => p.name).join(", ") : t.noRisks} icon={Battery} status={nearExhaustion.length > 0 ? "warning" : "healthy"} onClick={() => navigate("/providers?filter=exhaustion")} />
         </div>
 
-        {/* Risk & Savings Summary */}
         <Card className="p-4 border-l-[3px] border-l-status-warning">
           <div className="flex items-center gap-2 mb-3">
             <ShieldAlert className="h-4 w-4 text-status-warning" />
@@ -170,8 +171,10 @@ const Dashboard = () => {
             ))}
             <Card className="p-4">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t.quotaSnapshot}</h4>
-              <div className="flex items-center justify-around">
-                {providers.slice(0, 4).map((p) => (<RadialProgress key={p.id} value={p.usagePercent} size={56} strokeWidth={5} label={p.logo} />))}
+              <div className="grid grid-cols-2 gap-4 justify-items-center">
+                {providers.slice(0, 4).map((p) => (
+                  <RadialProgress key={p.id} value={p.usagePercent} size={72} strokeWidth={5} label={p.name} />
+                ))}
               </div>
             </Card>
           </div>
@@ -185,19 +188,37 @@ const Dashboard = () => {
             </button>
           </CardHeader>
           <CardContent className="space-y-2">
-            {activeAlertsList.map((alert) => (
-              <div key={alert.id} className="flex items-start gap-3 p-2.5 rounded-lg border border-border/50 bg-muted/20">
-                <StatusBadge status={alert.severity} showIcon />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{alert.providerName}</span>
-                    <span className="text-[10px] text-muted-foreground">{alert.type}</span>
+            {activeAlertsList.map((alert) => {
+              const billingUrl = getProviderBillingUrl(alert.providerId);
+              const action = alert.type.toLowerCase();
+
+              return (
+                <div key={alert.id} className="flex items-start gap-3 p-2.5 rounded-lg border border-border/50 bg-muted/20">
+                  <StatusBadge status={alert.severity} showIcon />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{alert.providerName}</span>
+                      <span className="text-[10px] text-muted-foreground">{alert.type}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{alert.description}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{alert.description}</p>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <span className="text-[10px] text-muted-foreground">{alert.triggerDate}</span>
+                    {action.includes("overage") && billingUrl && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={billingUrl} target="_blank" rel="noreferrer">{t.alertViewSubscription}</a>
+                      </Button>
+                    )}
+                    {action.includes("high usage") && (
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/providers/${alert.providerId}`)}>{t.alertViewUsage}</Button>
+                    )}
+                    {action.includes("underused") && (
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/providers/${alert.providerId}?section=subscription`)}>{t.alertOptimize}</Button>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[10px] text-muted-foreground shrink-0">{alert.triggerDate}</span>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       </div>
