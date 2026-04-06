@@ -21,7 +21,6 @@ def _get_reset_date() -> tuple[str, int]:
     else:
         end = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
     days = max(0, (end - now).days)
-    reset_date = (end.replace(day=end.day - 1) if end.day > 1 else end).strftime("%Y-%m")
     # Just return end of month as YYYY-MM-DD
     import calendar
     last_day = calendar.monthrange(now.year, now.month)[1]

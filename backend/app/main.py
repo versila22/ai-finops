@@ -2,11 +2,16 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.db import SessionLocal, create_tables
+from app.core.db import SessionLocal, create_tables, get_db
+from app.models.alert import Alert
+from app.models.adjustment import ManualAdjustment
+from app.models.plan import Plan
+from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse, PlanResponse
 from app.seed.seed_data import seed
 from app.api.v1.routes import health, dashboard, providers, settings as settings_routes
 
@@ -57,14 +62,6 @@ app.include_router(settings_routes.router, prefix="/api/v1", tags=["settings"])
 
 
 # Additional routes for alerts, plans, adjustments (served from dashboard data)
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from app.core.db import get_db
-from app.models.alert import Alert
-from app.models.plan import Plan
-from app.models.adjustment import ManualAdjustment
-from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse, PlanResponse
-
 
 @app.get("/api/v1/alerts", response_model=list[AlertResponse], tags=["alerts"])
 def list_alerts(db: Session = Depends(get_db)):

@@ -5,7 +5,7 @@ from app.core.db import get_db
 from app.models.provider import Provider
 from app.models.alert import Alert
 from app.models.adjustment import ManualAdjustment
-from app.schemas.provider import ProviderResponse, ProviderDetailResponse, ProviderUpdate
+from app.schemas.provider import ProviderResponse, ProviderUpdate
 from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse
 from app.services.dashboard_service import generate_daily_usage
 from app.services.sync import sync_all_providers, sync_provider_by_id
