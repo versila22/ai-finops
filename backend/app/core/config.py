@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -17,6 +18,10 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     ELEVENLABS_API_KEY: str = ""
+
+    JWT_SECRET: str = Field(...)
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
