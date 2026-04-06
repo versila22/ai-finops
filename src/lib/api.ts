@@ -3,6 +3,9 @@ import type {
   Alert,
   ManualAdjustment,
   DailyUsage,
+  PlanType,
+  SyncStatus,
+  DataOrigin,
 } from "@/data/mockData";
 import { clearToken, getToken, setToken } from "@/lib/auth";
 
@@ -98,6 +101,22 @@ export interface ProviderDetailResponse extends Provider {
   adjustments: ManualAdjustment[];
 }
 
+export interface ProviderPayload {
+  name: string;
+  logo: string;
+  category: string;
+  plan: string;
+  planType: PlanType;
+  monthlyCost: number;
+  includedQuota: number;
+  quotaUnit: string;
+  resetDate: string;
+  daysUntilReset: number;
+  consumed?: number;
+  syncStatus?: SyncStatus;
+  dataOrigin?: DataOrigin;
+}
+
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const result = await apiFetch<AuthResponse>("/auth/login", {
     method: "POST",
@@ -137,6 +156,26 @@ export async function fetchProvider(id: string): Promise<ProviderDetailResponse>
     alerts: response.alerts,
     adjustments: response.adjustments,
   };
+}
+
+export function createProvider(payload: ProviderPayload): Promise<Provider> {
+  return apiFetch<Provider>("/providers", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateProvider(providerId: string, payload: Partial<ProviderPayload>): Promise<Provider> {
+  return apiFetch<Provider>(`/providers/${providerId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteProvider(providerId: string): Promise<void> {
+  return apiFetch<void>(`/providers/${providerId}`, {
+    method: "DELETE",
+  });
 }
 
 export function fetchAlerts(): Promise<Alert[]> {

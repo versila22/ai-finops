@@ -7,18 +7,36 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useProviders } from "@/hooks/use-api";
 import { useI18n } from "@/i18n";
 import type { Provider } from "@/data/mockData";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { ProviderFormDialog } from "@/components/providers/ProviderFormDialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createProvider } from "@/lib/api";
+import { toast } from "sonner";
 
 const Providers = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeFilter = searchParams.get("filter");
   const { t, locale } = useI18n();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useProviders();
   const providers = data ?? [];
+
+  const createMutation = useMutation({
+    mutationFn: createProvider,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["providers"] });
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success(t.providerCreateSuccess);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t.providerCreateError);
+    },
+  });
 
   const filteredProviders = providers.filter((provider) => {
     if (activeFilter === "underused") return provider.usagePercent < 30;
@@ -51,16 +69,31 @@ const Providers = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-[1400px]">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t.providersTitle}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {t.providersSubtitle(providers.length, providers.filter((p) => p.syncStatus === "synced").length, providers.filter((p) => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length)}
-          </p>
-          {filterTitle && (
-            <div className="mt-3 inline-flex rounded-md border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              {filterTitle}: {filteredProviders.length}
-            </div>
-          )}
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t.providersTitle}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {t.providersSubtitle(providers.length, providers.filter((p) => p.syncStatus === "synced").length, providers.filter((p) => p.dataOrigin === "manual" || p.dataOrigin === "adjusted").length)}
+            </p>
+            {filterTitle && (
+              <div className="mt-3 inline-flex rounded-md border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                {filterTitle}: {filteredProviders.length}
+              </div>
+            )}
+          </div>
+          <ProviderFormDialog
+            mode="create"
+            onSubmit={async (payload) => {
+              await createMutation.mutateAsync(payload);
+            }}
+            isSubmitting={createMutation.isPending}
+            trigger={
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                {t.providerAddButton}
+              </Button>
+            }
+          />
         </div>
 
         <Card>
@@ -118,7 +151,7 @@ const Providers = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="text-xs">{new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
+                        <span className="text-xs">{p.resetDate ? new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"}</span>
                         <p className="text-[10px] text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</p>
                       </div>
                     </TableCell>

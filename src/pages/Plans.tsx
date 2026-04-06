@@ -5,12 +5,30 @@ import { UsageProgressBar } from "@/components/dashboard/UsageProgressBar";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { useI18n } from "@/i18n";
 import { useProviders } from "@/hooks/use-api";
-import { TrendingUp, TrendingDown, Minus, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Clock, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ProviderFormDialog } from "@/components/providers/ProviderFormDialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createProvider } from "@/lib/api";
+import { toast } from "sonner";
 
 const Plans = () => {
   const { t, locale } = useI18n();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useProviders();
   const providers = data ?? [];
+
+  const createMutation = useMutation({
+    mutationFn: createProvider,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["providers"] });
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success(t.providerCreateSuccess);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t.providerCreateError);
+    },
+  });
 
   if (isLoading) {
     return (
@@ -25,11 +43,26 @@ const Plans = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-[1200px]">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t.plansTitle}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {t.plansSubtitle(providers.filter(p => p.planType === "monthly_quota").length, providers.filter(p => p.planType === "prepaid_credits").length)}
-          </p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t.plansTitle}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {t.plansSubtitle(providers.filter(p => p.planType === "monthly_quota").length, providers.filter(p => p.planType === "prepaid_credits").length)}
+            </p>
+          </div>
+          <ProviderFormDialog
+            mode="create"
+            onSubmit={async (payload) => {
+              await createMutation.mutateAsync(payload);
+            }}
+            isSubmitting={createMutation.isPending}
+            trigger={
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                {t.providerAddButton}
+              </Button>
+            }
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -102,9 +135,9 @@ const Plans = () => {
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/30">
                     <div className="flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" />
-                      <span>{t.lastSyncShort}: {new Date(p.lastSync).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}</span>
+                      <span>{t.lastSyncShort}: {p.lastSync ? new Date(p.lastSync).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"}</span>
                     </div>
-                    <span>{t.resets} {new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })} · {t.daysLeftLabel(p.daysUntilReset)}</span>
+                    <span>{t.resets} {p.resetDate ? new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"} · {t.daysLeftLabel(p.daysUntilReset)}</span>
                   </div>
 
                   <div className="flex items-center gap-2">

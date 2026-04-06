@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -8,11 +8,26 @@ import { RecommendationCard } from "@/components/dashboard/RecommendationCard";
 import { ProviderLogo } from "@/components/dashboard/ProviderLogo";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useProvider } from "@/hooks/use-api";
-import { ArrowLeft, Clock, RefreshCw, TrendingUp, TrendingDown, Minus, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock, RefreshCw, TrendingUp, TrendingDown, Minus, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useI18n } from "@/i18n";
 import { getProviderBillingUrl } from "@/config/providerBilling";
+import { ProviderFormDialog } from "@/components/providers/ProviderFormDialog";
+import { deleteProvider, updateProvider } from "@/lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const ProviderDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +35,36 @@ const ProviderDetail = () => {
   const [searchParams] = useSearchParams();
   const subscriptionRef = useRef<HTMLDivElement | null>(null);
   const { t, locale } = useI18n();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useProvider(id ?? "");
+  const [editOpen, setEditOpen] = useState(false);
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof updateProvider>[1]) => updateProvider(id ?? "", payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["provider", id] });
+      await queryClient.invalidateQueries({ queryKey: ["providers"] });
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success(t.providerEditSuccess);
+      setEditOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t.providerEditError);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteProvider(id ?? ""),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["providers"] });
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success(t.providerDeleteSuccess);
+      navigate("/providers");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : t.providerDeleteError);
+    },
+  });
 
   useEffect(() => {
     if (searchParams.get("section") === "subscription") {
@@ -65,19 +109,59 @@ const ProviderDetail = () => {
   return (
     <DashboardLayout>
       <div className="space-y-5 max-w-[1200px]">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/providers")} className="shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <ProviderLogo name={provider.name} logo={provider.logo} size="lg" />
-          <div className="flex-1">
-            <h1 className="text-xl font-bold tracking-tight">{provider.name}</h1>
-            <p className="text-xs text-muted-foreground">{provider.category} · {provider.plan}</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/providers")} className="shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <ProviderLogo name={provider.name} logo={provider.logo} size="lg" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold tracking-tight">{provider.name}</h1>
+              <p className="text-xs text-muted-foreground">{provider.category} · {provider.plan}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={provider.planType} />
             <StatusBadge status={provider.syncStatus} showIcon />
             <StatusBadge status={provider.dataOrigin} />
+            <ProviderFormDialog
+              mode="edit"
+              provider={provider}
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              onSubmit={async (payload) => {
+                await updateMutation.mutateAsync(payload);
+              }}
+              isSubmitting={updateMutation.isPending}
+              trigger={
+                <Button variant="outline">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  {t.providerEditButton}
+                </Button>
+              }
+            />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t.providerDeleteButton}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t.providerDeleteConfirmTitle}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t.providerDeleteConfirmDescription(provider.name)}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t.providerFormCancel}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>
+                    {t.providerDeleteConfirmAction}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 
@@ -124,7 +208,7 @@ const ProviderDetail = () => {
           <UsageProgressBar
             value={provider.usagePercent}
             label={`${provider.consumed.toLocaleString()} / ${provider.includedQuota.toLocaleString()} ${provider.quotaUnit}`}
-            sublabel={`${t.resets} ${new Date(provider.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}`}
+            sublabel={`${t.resets} ${provider.resetDate ? new Date(provider.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"}`}
             size="md"
           />
         </Card>
@@ -261,7 +345,7 @@ const ProviderDetail = () => {
           </div>
           <div className="flex items-center gap-1.5">
             <Clock className="h-3 w-3" />
-            <span>{t.lastSynced}: {new Date(provider.lastSync).toLocaleString(locale === "fr" ? "fr-FR" : "en-GB")}</span>
+            <span>{t.lastSynced}: {provider.lastSync ? new Date(provider.lastSync).toLocaleString(locale === "fr" ? "fr-FR" : "en-GB") : "—"}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span>{t.dataOrigin}:</span>
