@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.provider import Provider
 from app.services.notification_service import check_and_notify_alerts
+from .anthropic_sync import fetch_anthropic_usage
 from .elevenlabs_sync import fetch_elevenlabs_usage
 from .openai_sync import fetch_openai_usage
 
@@ -161,11 +162,55 @@ async def _sync_elevenlabs(db: Session) -> dict:
         return {"provider": "elevenlabs", "status": "error", "reason": str(e)}
 
 
+async def _sync_anthropic(db: Session) -> dict:
+    """Sync Anthropic provider — validates key and updates sync status."""
+    try:
+        result = await fetch_anthropic_usage()
+        if result is None:
+            return {"provider": "anthropic", "status": "skipped", "reason": "no_api_key"}
+
+        provider = db.query(Provider).filter_by(id="anthropic").first()
+        if not provider:
+            return {"provider": "anthropic", "status": "skipped", "reason": "provider_not_found"}
+
+        if result.get("synced") and result.get("api_key_valid"):
+            # We can't get total monthly usage from API, so keep existing consumed value
+            # Just update sync status and timestamp
+            provider.sync_status = "synced"
+            provider.last_sync = _now_iso()
+            provider.data_origin = "manual"  # still manual until Anthropic has a billing API
+
+            rec, rec_text, urgency = _compute_recommendation(
+                provider.usage_percent, provider.days_until_reset
+            )
+            provider.recommendation = rec
+            provider.recommendation_text = rec_text
+            provider.urgency = urgency
+
+            db.commit()
+            logger.info(f"Anthropic key valid, sync status updated. Usage: {provider.usage_percent}%")
+            return {
+                "provider": "anthropic",
+                "status": "synced",
+                "note": "key_valid_manual_usage",
+                "usage_percent": provider.usage_percent,
+            }
+
+        provider.sync_status = "error"
+        provider.last_sync = _now_iso()
+        db.commit()
+        return {"provider": "anthropic", "status": "error", "reason": "api_key_invalid"}
+    except Exception as e:
+        logger.error(f"Anthropic sync exception: {e}")
+        return {"provider": "anthropic", "status": "error", "reason": str(e)}
+
+
 async def sync_all_providers(db: Session) -> list[dict]:
     """Sync all auto-sync providers sequentially, then evaluate alerts."""
     logger.info("Starting sync for all auto-sync providers...")
     results = [
         await _sync_openai(db),
+        await _sync_anthropic(db),
         await _sync_elevenlabs(db),
     ]
     new_alerts = check_and_notify_alerts(db)
@@ -177,6 +222,8 @@ async def sync_provider_by_id(provider_id: str, db: Session) -> dict:
     """Sync a specific provider by ID, then evaluate alerts."""
     if provider_id == "openai":
         result = await _sync_openai(db)
+    elif provider_id == "anthropic":
+        result = await _sync_anthropic(db)
     elif provider_id == "elevenlabs":
         result = await _sync_elevenlabs(db)
     else:
