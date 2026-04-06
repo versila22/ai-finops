@@ -3,7 +3,7 @@ const en = {
   appName: "AI FinOps",
   appTagline: "Spend Cockpit",
   headerTitle: "AI FinOps Cockpit",
-  april2026: "April 2026",
+  april2026: "v0.2.0",
   cycle: "Cycle",
   cycleRange: "Apr 1 — Apr 30, 2026",
 
@@ -37,7 +37,7 @@ const en = {
 
   // Dashboard
   dashTitle: "AI Spend Cockpit",
-  dashSubtitle: (n: number) => `April 2026 · ${n} providers tracked`,
+  dashSubtitle: (n: number) => `v0.2.0 · ${n} providers tracked`,
   potentialSavings: (amount: number) => `€${amount}/mo potential savings identified`,
   kpiMonthlyBudget: "Monthly Budget",
   kpiTotalSpend: "Total Spend",

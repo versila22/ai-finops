@@ -4,7 +4,7 @@ const fr: Dictionary = {
   appName: "AI FinOps",
   appTagline: "Tableau de bord",
   headerTitle: "AI FinOps — Cockpit",
-  april2026: "Avril 2026",
+  april2026: "v0.2.0",
   cycle: "Cycle",
   cycleRange: "1 avr. — 30 avr. 2026",
 
@@ -35,7 +35,7 @@ const fr: Dictionary = {
   authLogout: "Déconnexion",
 
   dashTitle: "Cockpit IA — Dépenses",
-  dashSubtitle: (n) => `Avril 2026 · ${n} fournisseurs suivis`,
+  dashSubtitle: (n) => `v0.2.0 · ${n} fournisseurs suivis`,
   potentialSavings: (amount) => `${amount} €/mois d'économies potentielles identifiées`,
   kpiMonthlyBudget: "Budget mensuel",
   kpiTotalSpend: "Dépenses totales",
