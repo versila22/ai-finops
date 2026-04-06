@@ -1,5 +1,5 @@
 services:
-  ai-finops-backend:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -7,23 +7,42 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env
-    environment:
-      - CORS_ORIGINS=["https://ai-finops.lovable.app","https://ai-finops-api.duckdns.org","http://localhost:5173"]
-      - DATABASE_URL=sqlite:///./finops.db
     volumes:
       - finops-data:/app/data
+    networks:
+      - internal
+      - traefik_default
     labels:
       - "traefik.enable=true"
+      # API: ai-finops-api.duckdns.org → backend:8001
       - "traefik.http.routers.finops-api.rule=Host(`ai-finops-api.duckdns.org`)"
       - "traefik.http.routers.finops-api.entrypoints=websecure"
       - "traefik.http.routers.finops-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.finops-api.loadbalancer.server.port=8001"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: ai-finops-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
     networks:
+      - internal
       - traefik_default
+    labels:
+      - "traefik.enable=true"
+      # Frontend: ai-finops.duckdns.org → frontend:80
+      - "traefik.http.routers.finops-front.rule=Host(`ai-finops.duckdns.org`)"
+      - "traefik.http.routers.finops-front.entrypoints=websecure"
+      - "traefik.http.routers.finops-front.tls.certresolver=letsencrypt"
+      - "traefik.http.services.finops-front.loadbalancer.server.port=80"
 
 volumes:
   finops-data:
 
 networks:
+  internal:
   traefik_default:
     external: true
