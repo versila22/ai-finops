@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.models.alert import Alert
 from app.models.provider import Provider
+from app.models.settings import Settings
 
 
-HIGH_USAGE_THRESHOLD = 80
 UNDERUSED_THRESHOLD = 30
 
 
@@ -64,18 +64,22 @@ def _create_alert(
 
 
 def check_and_notify_alerts(db: Session) -> list[Alert]:
+    settings = db.query(Settings).filter_by(id="global").first()
+    warning_threshold = settings.alert_threshold_warning if settings else 80
+    critical_threshold = settings.alert_threshold_critical if settings else 90
     providers = db.query(Provider).all()
     new_alerts: list[Alert] = []
 
     for provider in providers:
-        if provider.usage_percent >= HIGH_USAGE_THRESHOLD and provider.overage <= 0:
+        if provider.usage_percent >= warning_threshold and provider.overage <= 0:
             definition = ALERT_DEFINITIONS["high_usage"]
+            severity = "critical" if provider.usage_percent >= critical_threshold else definition["severity"]
             if not _existing_active_alert(db, provider.id, definition["type"]):
                 new_alerts.append(_create_alert(
                     db,
                     provider=provider,
                     alert_type=definition["type"],
-                    severity=definition["severity"],
+                    severity=severity,
                     description=(
                         f"{provider.name} usage is at {provider.usage_percent}% with "
                         f"{provider.days_until_reset} days remaining."

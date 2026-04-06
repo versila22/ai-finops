@@ -98,6 +98,14 @@ const ProviderDetail = () => {
   const providerAdjustments = provider.adjustments ?? [];
   const dailyUsage = provider.dailyUsage ?? [];
   const billingUrl = getProviderBillingUrl(provider.id);
+  const formatUsageDate = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  };
 
   const trendIcon = provider.trend === "up"
     ? <TrendingUp className="h-3.5 w-3.5 text-status-warning" />
@@ -229,9 +237,16 @@ const ProviderDetail = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" tick={{ fill: "hsl(215, 16%, 47%)", fontSize: 10 }} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "hsl(215, 16%, 47%)", fontSize: 10 }}
+                      tickFormatter={formatUsageDate}
+                    />
                     <YAxis tick={{ fill: "hsl(215, 16%, 47%)", fontSize: 10 }} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                    <Tooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                      labelFormatter={(value) => formatUsageDate(String(value))}
+                    />
                     <Area type="monotone" dataKey="consumed" stroke="hsl(226, 70%, 55%)" fill="url(#usageGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>

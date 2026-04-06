@@ -11,6 +11,7 @@ from app.models.provider import Provider
 from app.models.user import User
 from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse
 from app.schemas.provider import ProviderCreate, ProviderResponse, ProviderUpdate
+from app.api.v1.routes.dashboard import invalidate_dashboard_cache
 from app.services.dashboard_service import generate_daily_usage
 from app.services.sync import sync_all_providers, sync_provider_by_id
 
@@ -32,6 +33,7 @@ def list_providers(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # TODO multi-user: Provider has no user_id FK yet, so data is globally shared across users.
     providers = db.query(Provider).all()
     return [ProviderResponse.model_validate(p) for p in providers]
 
@@ -92,6 +94,7 @@ def create_provider(
     )
     db.commit()
     db.refresh(provider)
+    invalidate_dashboard_cache()
     return ProviderResponse.model_validate(provider)
 
 
@@ -105,7 +108,7 @@ def get_provider(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
-    daily_usage = generate_daily_usage(provider)
+    daily_usage = generate_daily_usage(db, provider_id)
     alerts = db.query(Alert).filter_by(provider_id=provider_id).all()
     adjustments = db.query(ManualAdjustment).filter_by(provider_id=provider_id).all()
 
@@ -147,6 +150,7 @@ def update_provider(
 
     db.commit()
     db.refresh(provider)
+    invalidate_dashboard_cache()
     return ProviderResponse.model_validate(provider)
 
 
@@ -165,11 +169,13 @@ def delete_provider(
     db.query(Plan).filter_by(provider_id=provider_id).delete()
     db.delete(provider)
     db.commit()
+    invalidate_dashboard_cache()
     return Response(status_code=204)
 
 
 async def _run_sync_all(db: Session):
     results = await sync_all_providers(db)
+    invalidate_dashboard_cache()
     providers = db.query(Provider).all()
     return {
         "sync_results": results,
@@ -196,6 +202,7 @@ async def _run_sync_provider(provider_id: str, db: Session):
 
     result = await sync_provider_by_id(provider_id, db)
     db.refresh(provider)
+    invalidate_dashboard_cache()
     return {
         "sync_result": result,
         "provider": ProviderResponse.model_validate(provider).model_dump(by_alias=True),

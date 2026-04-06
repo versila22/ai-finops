@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.api.v1.routes.dashboard import invalidate_dashboard_cache
 from app.core.db import get_db
 from app.models.settings import Settings
 from app.models.user import User
@@ -37,4 +38,5 @@ def update_settings(
 
     db.commit()
     db.refresh(settings)
+    invalidate_dashboard_cache()
     return SettingsResponse.model_validate(settings)

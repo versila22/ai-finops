@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -12,12 +13,14 @@ from sqlalchemy.pool import StaticPool
 os.environ.setdefault("JWT_SECRET", "test-secret")
 
 from app import auth as auth_module
+from app.api.v1.routes.dashboard import invalidate_dashboard_cache
 from app.auth import create_access_token, create_user
 from app.core.config import settings
 from app.core.db import Base, get_db
 from app.main import app
 from app.models.adjustment import ManualAdjustment
 from app.models.alert import Alert
+from app.models.daily_usage import DailyUsage
 from app.models.plan import Plan
 from app.models.provider import Provider
 from app.models.settings import Settings
@@ -163,6 +166,30 @@ def seeded_db(db_session):
                 date="2026-04-06",
                 applied_by="Admin",
             ),
+            DailyUsage(
+                id="du-1",
+                provider_id="openai",
+                date=date.today() - timedelta(days=3),
+                cost_usd=4.0,
+            ),
+            DailyUsage(
+                id="du-2",
+                provider_id="openai",
+                date=date.today() - timedelta(days=2),
+                cost_usd=6.0,
+            ),
+            DailyUsage(
+                id="du-3",
+                provider_id="openai",
+                date=date.today() - timedelta(days=1),
+                cost_usd=7.5,
+            ),
+            DailyUsage(
+                id="du-4",
+                provider_id="openai",
+                date=date.today(),
+                cost_usd=7.5,
+            ),
             Settings(
                 id="global",
                 monthly_budget=200,
@@ -186,6 +213,8 @@ def override_get_db():
 
 @pytest.fixture(autouse=True)
 def override_dependencies(db_session, monkeypatch):
+    invalidate_dashboard_cache()
+
     def _get_test_db():
         try:
             yield db_session
@@ -201,6 +230,7 @@ def override_dependencies(db_session, monkeypatch):
 
     app.dependency_overrides[get_db] = _get_test_db
     yield
+    invalidate_dashboard_cache()
     app.dependency_overrides.clear()
 
 

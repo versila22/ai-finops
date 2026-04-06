@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from app.core.db import SessionLocal, create_tables
 from app.models.adjustment import ManualAdjustment
 from app.models.alert import Alert
+from app.models.daily_usage import DailyUsage
 from app.models.plan import Plan
 from app.models.provider import Provider
 from app.models.settings import Settings

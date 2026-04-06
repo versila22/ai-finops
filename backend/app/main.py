@@ -16,11 +16,11 @@ from app.core.db import SessionLocal, create_tables, get_db
 from app.core.rate_limit import limiter
 from app.models.adjustment import ManualAdjustment
 from app.models.alert import Alert
+from app.models.daily_usage import DailyUsage
 from app.models.plan import Plan
 from app.models.user import User
 from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse, PlanResponse
 from app.seed.seed_data import seed
-from app.services.notification_service import check_and_notify_alerts
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ async def _background_sync():
         db = SessionLocal()
         try:
             results = await sync_all_providers(db)
-            check_and_notify_alerts(db)
             logger.info(f"Background startup sync results: {results}")
         finally:
             db.close()
@@ -77,6 +76,7 @@ def list_alerts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # TODO multi-user: Alert has no user_id FK yet, so alerts are globally shared across users.
     alerts = db.query(Alert).offset(offset).limit(limit).all()
     return [AlertResponse.model_validate(alert) for alert in alerts]
 

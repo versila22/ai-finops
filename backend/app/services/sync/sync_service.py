@@ -1,10 +1,15 @@
 """Sync orchestrator — fetches live data from auto-sync providers and updates DB."""
+import asyncio
 import logging
+from datetime import date
 from datetime import datetime as dt
 from datetime import timezone
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.core.db import SessionLocal
+from app.models.daily_usage import DailyUsage
 from app.models.provider import Provider
 from app.services.notification_service import check_and_notify_alerts
 from .anthropic_sync import fetch_anthropic_usage
@@ -30,6 +35,29 @@ def _compute_recommendation(usage_percent: float, days_until_reset: int) -> tupl
 
 def _now_iso() -> str:
     return dt.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _record_daily_snapshot(db: Session, provider: Provider, *, cost_usd: float | None = None):
+    snapshot_date = date.today()
+    snapshot_cost = float(provider.consumed if cost_usd is None else cost_usd)
+    existing = (
+        db.query(DailyUsage)
+        .filter_by(provider_id=provider.id, date=snapshot_date)
+        .first()
+    )
+
+    if existing:
+        existing.cost_usd = snapshot_cost
+        return existing
+
+    snapshot = DailyUsage(
+        id=str(uuid4()),
+        provider_id=provider.id,
+        date=snapshot_date,
+        cost_usd=snapshot_cost,
+    )
+    db.add(snapshot)
+    return snapshot
 
 
 async def _sync_openai(db: Session) -> dict:
@@ -62,6 +90,7 @@ async def _sync_openai(db: Session) -> dict:
             provider.recommendation = rec
             provider.recommendation_text = rec_text
             provider.urgency = urgency
+            _record_daily_snapshot(db, provider, cost_usd=cost)
 
             db.commit()
             logger.info(f"OpenAI synced: ${cost:.4f} this month ({provider.usage_percent:.1f}%)")
@@ -132,6 +161,7 @@ async def _sync_elevenlabs(db: Session) -> dict:
             provider.recommendation = rec
             provider.recommendation_text = rec_text
             provider.urgency = urgency
+            _record_daily_snapshot(db, provider)
 
             db.commit()
             logger.info(
@@ -186,6 +216,7 @@ async def _sync_anthropic(db: Session) -> dict:
             provider.recommendation = rec
             provider.recommendation_text = rec_text
             provider.urgency = urgency
+            _record_daily_snapshot(db, provider)
 
             db.commit()
             logger.info(f"Anthropic key valid, sync status updated. Usage: {provider.usage_percent}%")
@@ -206,16 +237,27 @@ async def _sync_anthropic(db: Session) -> dict:
 
 
 async def sync_all_providers(db: Session) -> list[dict]:
-    """Sync all auto-sync providers sequentially, then evaluate alerts."""
+    """Sync all auto-sync providers concurrently, then evaluate alerts."""
     logger.info("Starting sync for all auto-sync providers...")
-    results = [
-        await _sync_openai(db),
-        await _sync_anthropic(db),
-        await _sync_elevenlabs(db),
-    ]
+
+    async def _run_sync_task(provider_id: str, sync_fn) -> dict:
+        task_db = SessionLocal()
+        try:
+            return await sync_fn(task_db)
+        except Exception as exc:
+            logger.error("%s sync raised an unhandled exception: %s", provider_id, exc)
+            return {"provider": provider_id, "status": "error", "reason": str(exc)}
+        finally:
+            task_db.close()
+
+    results = await asyncio.gather(
+        _run_sync_task("openai", _sync_openai),
+        _run_sync_task("anthropic", _sync_anthropic),
+        _run_sync_task("elevenlabs", _sync_elevenlabs),
+    )
     new_alerts = check_and_notify_alerts(db)
     logger.info(f"Sync complete: {results} | new alerts: {len(new_alerts)}")
-    return list(results)
+    return results
 
 
 async def sync_provider_by_id(provider_id: str, db: Session) -> dict:

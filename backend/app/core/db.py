@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from app.core.config import settings
@@ -12,6 +12,12 @@ engine = create_engine(
     connect_args=_connect_args,
     echo=False,
 )
+
+if settings.DATABASE_URL.startswith("sqlite"):
+    with engine.connect() as conn:
+        conn.execute(text("PRAGMA journal_mode=WAL"))
+        conn.execute(text("PRAGMA foreign_keys=ON"))
+        conn.commit()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -1,10 +1,10 @@
-import math
-import random
+from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.models.provider import Provider
 from app.models.alert import Alert
+from app.models.daily_usage import DailyUsage
+from app.models.provider import Provider
 from app.models.settings import Settings
 from app.schemas.dashboard import KPIs
 from app.schemas.provider import DailyUsageResponse
@@ -44,26 +44,29 @@ def compute_kpis(db: Session) -> KPIs:
     )
 
 
-def generate_daily_usage(provider: Provider) -> list[DailyUsageResponse]:
-    """Generate daily usage data for a provider (mimics frontend logic)."""
-    if not provider:
+def generate_daily_usage(db: Session, provider_id: str, days: int = 30) -> list[DailyUsageResponse]:
+    """Return real daily usage snapshots from the database."""
+    if days <= 0:
         return []
 
-    base_daily = provider.consumed / 30
-    data: list[DailyUsageResponse] = []
+    start_date = date.today() - timedelta(days=days - 1)
+    snapshots = (
+        db.query(DailyUsage)
+        .filter(DailyUsage.provider_id == provider_id, DailyUsage.date >= start_date)
+        .order_by(DailyUsage.date.asc())
+        .all()
+    )
+
     cumulative = 0.0
-
-    random.seed(hash(provider.id))  # deterministic per provider
-
-    for i in range(1, 31):
-        day_variance = 0.3 + math.sin(i * 0.4) * 0.5 + random.random() * 0.5
-        consumed = round(base_daily * day_variance)
-        cumulative += consumed
-        if i <= 4:
-            data.append(DailyUsageResponse(
-                date=f"Apr {i}",
-                consumed=consumed,
-                cumulative=min(cumulative, provider.consumed),
-            ))
+    data: list[DailyUsageResponse] = []
+    for snapshot in snapshots:
+        cumulative += snapshot.cost_usd
+        data.append(
+            DailyUsageResponse(
+                date=snapshot.date.isoformat(),
+                consumed=round(snapshot.cost_usd, 4),
+                cumulative=round(cumulative, 4),
+            )
+        )
 
     return data
