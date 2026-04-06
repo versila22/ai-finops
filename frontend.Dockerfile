@@ -3,8 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG VITE_API_URL=/api/v1
-ENV VITE_API_URL=$VITE_API_URL
+# VITE_API_URL intentionally NOT set — api.ts defaults to /api/v1
 RUN npm run build
 
 FROM nginx:alpine
