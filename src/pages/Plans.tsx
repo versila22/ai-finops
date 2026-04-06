@@ -82,7 +82,7 @@ const Plans = () => {
                     <ProviderLogo name={p.name} logo={p.logo} size="sm" />
                     <div className="flex-1">
                       <CardTitle className="text-sm font-bold">{p.name}</CardTitle>
-                      <p className="text-[10px] text-muted-foreground">{p.plan}</p>
+                      <p className="text-xs text-muted-foreground">{p.plan}</p>
                     </div>
                     <StatusBadge status={p.planType} />
                   </div>
@@ -108,20 +108,20 @@ const Plans = () => {
 
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <div className="space-y-0.5">
-                      <p className="text-[10px] text-muted-foreground">{t.projectedLabel}</p>
+                      <p className="text-xs text-muted-foreground">{t.projectedLabel}</p>
                       <span className={`text-sm font-bold tabular-nums ${p.projectedEndOfCycle > 100 ? "text-status-critical" : p.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>
                         {p.projectedEndOfCycle}%
                       </span>
                     </div>
                     <div className="space-y-0.5 text-center">
-                      <p className="text-[10px] text-muted-foreground">{t.trendLabel}</p>
+                      <p className="text-xs text-muted-foreground">{t.trendLabel}</p>
                       <div className="flex items-center justify-center gap-1">
                         {trendIcon}
-                        <span className="text-[10px] text-muted-foreground">{trendText}</span>
+                        <span className="text-xs text-muted-foreground">{trendText}</span>
                       </div>
                     </div>
                     <div className="space-y-0.5 text-right">
-                      <p className="text-[10px] text-muted-foreground">{t.action}</p>
+                      <p className="text-xs text-muted-foreground">{t.action}</p>
                       <StatusBadge status={p.recommendation} />
                     </div>
                   </div>
@@ -132,7 +132,7 @@ const Plans = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/30">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/30">
                     <div className="flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" />
                       <span>{t.lastSyncShort}: {p.lastSync ? new Date(p.lastSync).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"}</span>

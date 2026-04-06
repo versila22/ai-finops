@@ -176,38 +176,38 @@ const ProviderDetail = () => {
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <Card className="p-4 flex flex-col items-center justify-center col-span-1">
             <RadialProgress value={provider.usagePercent} size={88} strokeWidth={6} />
-            <p className="text-[10px] text-muted-foreground font-medium mt-1.5">{t.quotaUsed}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-1.5">{t.quotaUsed}</p>
           </Card>
           <Card className="p-4 border-l-[3px] border-l-primary">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.planCost}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.planCost}</p>
             <p className="text-2xl font-bold mt-1 tabular-nums">€{provider.monthlyCost}</p>
             <StatusBadge status={provider.planType} className="mt-1.5" />
           </Card>
           <Card className="p-4 border-l-[3px] border-l-status-warning">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.consumed}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.consumed}</p>
             <p className="text-xl font-bold mt-1 tabular-nums">{provider.consumed.toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground">{t.of} {provider.includedQuota.toLocaleString()} {provider.quotaUnit}</p>
+            <p className="text-xs text-muted-foreground">{t.of} {provider.includedQuota.toLocaleString()} {provider.quotaUnit}</p>
           </Card>
           <Card className="p-4 border-l-[3px] border-l-status-healthy">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.remaining}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.remaining}</p>
             <p className="text-xl font-bold mt-1 tabular-nums">{Math.max(0, provider.remaining).toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground">{provider.quotaUnit}</p>
+            <p className="text-xs text-muted-foreground">{provider.quotaUnit}</p>
           </Card>
           <Card className={`p-4 border-l-[3px] ${provider.overage > 0 ? "border-l-status-critical" : "border-l-border"}`}>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.overage}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.overage}</p>
             <p className={`text-xl font-bold mt-1 tabular-nums ${provider.overage > 0 ? "text-status-critical" : ""}`}>
               {provider.overage > 0 ? `€${provider.overage}` : "€0"}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t.daysUntilReset(provider.daysUntilReset)}</p>
+            <p className="text-xs text-muted-foreground">{t.daysUntilReset(provider.daysUntilReset)}</p>
           </Card>
           <Card className="p-4 border-l-[3px] border-l-primary/50">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.projectedLabel}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.projectedLabel}</p>
             <p className={`text-xl font-bold mt-1 tabular-nums ${provider.projectedEndOfCycle > 100 ? "text-status-critical" : provider.projectedEndOfCycle >= 80 ? "text-status-warning" : "text-foreground"}`}>
               {provider.projectedEndOfCycle}%
             </p>
             <div className="flex items-center gap-1 mt-0.5">
               {trendIcon}
-              <span className="text-[10px] text-muted-foreground">{trendText}</span>
+              <span className="text-xs text-muted-foreground">{trendText}</span>
             </div>
           </Card>
         </div>
@@ -279,10 +279,10 @@ const ProviderDetail = () => {
                   <div key={a.id} className="p-3 rounded-lg border border-border/50 bg-muted/20 space-y-1">
                     <div className="flex items-center gap-2">
                       <StatusBadge status={a.severity} showIcon />
-                      <span className="text-[10px] text-muted-foreground">{a.triggerDate}</span>
+                      <span className="text-xs text-muted-foreground">{a.triggerDate}</span>
                     </div>
                     <p className="text-xs leading-relaxed">{a.description}</p>
-                    <p className="text-[10px] text-muted-foreground">{a.recommendedAction}</p>
+                    <p className="text-xs text-muted-foreground">{a.recommendedAction}</p>
                   </div>
                 ))
               )}
@@ -305,8 +305,8 @@ const ProviderDetail = () => {
                         {a.amount > 0 ? "+" : ""}{a.amount}
                       </span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{a.note}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{a.date} · {a.appliedBy}</p>
+                    <p className="text-xs text-muted-foreground">{a.note}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{a.date} · {a.appliedBy}</p>
                   </div>
                 ))
               )}

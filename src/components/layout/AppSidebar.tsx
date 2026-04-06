@@ -47,7 +47,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div>
               <p className="text-sm font-bold tracking-tight leading-none">{t.appName}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t.appTagline}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.appTagline}</p>
             </div>
           )}
         </div>
@@ -70,7 +70,7 @@ export function AppSidebar() {
                         <>
                           <span className="flex-1">{item.title}</span>
                           {item.badge && item.badge > 0 && (
-                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-status-critical text-[10px] font-bold text-status-critical-foreground">
+                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-status-critical text-xs font-bold text-status-critical-foreground">
                               {item.badge}
                             </span>
                           )}
@@ -87,7 +87,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t.cycle}</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.cycle}</p>
             <p className="text-xs font-medium mt-0.5">{t.cycleRange}</p>
           </div>
         )}

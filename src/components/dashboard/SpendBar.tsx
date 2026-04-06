@@ -15,7 +15,7 @@ export function SpendBar({ planCost, overage, budget, className }: SpendBarProps
 
   return (
     <div className={cn("space-y-1", className)}>
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>€0</span>
         <span>€{budget}</span>
       </div>
@@ -31,7 +31,7 @@ export function SpendBar({ planCost, overage, budget, className }: SpendBarProps
           />
         )}
       </div>
-      <div className="flex items-center gap-4 text-[10px]">
+      <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-1">
           <div className="h-2 w-2 rounded-sm bg-spend-plan" />
           <span className="text-muted-foreground">{t.plans} €{planCost}</span>

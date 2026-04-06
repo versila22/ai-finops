@@ -123,7 +123,7 @@ const Providers = () => {
                         <ProviderLogo name={p.name} logo={p.logo} size="sm" />
                         <div>
                           <p className="text-sm font-semibold">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{p.category}</p>
+                          <p className="text-xs text-muted-foreground">{p.category}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -152,7 +152,7 @@ const Providers = () => {
                     <TableCell>
                       <div>
                         <span className="text-xs">{p.resetDate ? new Date(p.resetDate).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" }) : "—"}</span>
-                        <p className="text-[10px] text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</p>
+                        <p className="text-xs text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</p>
                       </div>
                     </TableCell>
                     <TableCell><StatusBadge status={p.syncStatus} showIcon /></TableCell>

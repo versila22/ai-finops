@@ -56,7 +56,7 @@ export function RecommendationCard({ providerName, recommendation, text, detail,
             <span className="text-sm font-semibold">{providerName}</span>
             <StatusBadge status={recommendation} />
             {urgency && (
-              <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold", urgencyStyles[urgency])}>
+              <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-semibold", urgencyStyles[urgency])}>
                 <AlertTriangle className="h-2.5 w-2.5" />
                 {urgencyLabel}
               </span>
@@ -80,7 +80,7 @@ export function RecommendationCard({ providerName, recommendation, text, detail,
         <span className="text-sm font-bold">{providerName}</span>
         <StatusBadge status={recommendation} />
         {urgency && (
-          <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ml-auto", urgencyStyles[urgency])}>
+          <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-semibold ml-auto", urgencyStyles[urgency])}>
             <AlertTriangle className="h-2.5 w-2.5" />
             {urgencyLabel}
           </span>

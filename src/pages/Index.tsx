@@ -87,24 +87,24 @@ const Dashboard = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-lg bg-status-critical-muted/50 border border-status-critical/15 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-status-critical">{t.riskAtRisk}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-critical">{t.riskAtRisk}</p>
               <p className="text-xl font-bold text-status-critical mt-0.5">{atRiskProviders.length}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t.projectedOverage}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.projectedOverage}</p>
             </div>
             <div className="rounded-lg bg-status-critical-muted/50 border border-status-critical/15 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-status-critical">{t.riskOverspending}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-critical">{t.riskOverspending}</p>
               <p className="text-xl font-bold text-status-critical mt-0.5">{overspendingProviders.length}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t.activeOverage}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.activeOverage}</p>
             </div>
             <div className="rounded-lg bg-status-warning-muted/50 border border-status-warning/15 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-status-warning">{t.riskOptimizable}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-warning">{t.riskOptimizable}</p>
               <p className="text-xl font-bold text-status-warning mt-0.5">{optimizableProviders.length}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t.savingsAvailable}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.savingsAvailable}</p>
             </div>
             <div className="rounded-lg bg-status-healthy-muted/50 border border-status-healthy/15 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-status-healthy">{t.riskHealthy}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-status-healthy">{t.riskHealthy}</p>
               <p className="text-xl font-bold text-status-healthy mt-0.5">{healthyProviders.length}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{t.onTrack}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.onTrack}</p>
             </div>
           </div>
         </Card>
@@ -125,9 +125,9 @@ const Dashboard = () => {
                 {t.allProviders} <ArrowRight className="h-3 w-3" />
               </button>
             </CardHeader>
-            <CardContent className="space-y-1 pt-0">
+            <CardContent className="space-y-1 pt-0 overflow-x-auto">
               {providers.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors group" onClick={() => navigate(`/providers/${p.id}`)}>
+                <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors group min-w-[480px]" onClick={() => navigate(`/providers/${p.id}`)}>
                   <ProviderLogo name={p.name} logo={p.logo} size="sm" />
                   <div className="w-[100px] shrink-0">
                     <p className="text-sm font-semibold leading-tight">{p.name}</p>
@@ -139,14 +139,14 @@ const Dashboard = () => {
                   </div>
                   <div className="w-16 text-right shrink-0">
                     <p className="text-sm font-semibold tabular-nums">€{p.monthlyCost}</p>
-                    {p.overage > 0 && <p className="text-[10px] font-semibold text-status-critical">+€{p.overage}</p>}
+                    {p.overage > 0 && <p className="text-xs font-semibold text-status-critical">+€{p.overage}</p>}
                   </div>
                   <div className="w-12 text-right shrink-0">
                     {p.trend === "up" && <TrendingUp className="inline h-3.5 w-3.5 text-status-warning" />}
                     {p.trend === "down" && <TrendingDown className="inline h-3.5 w-3.5 text-status-info" />}
-                    {p.trend === "stable" && <span className="text-[10px] text-muted-foreground">—</span>}
+                    {p.trend === "stable" && <span className="text-xs text-muted-foreground">—</span>}
                   </div>
-                  <div className="w-14 text-right shrink-0"><span className="text-[10px] text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</span></div>
+                  <div className="w-14 text-right shrink-0"><span className="text-xs text-muted-foreground">{t.daysLeft(p.daysUntilReset)}</span></div>
                   <div className="w-[72px] shrink-0 flex justify-end opacity-80 group-hover:opacity-100"><StatusBadge status={p.recommendation} /></div>
                 </div>
               ))}
@@ -156,7 +156,7 @@ const Dashboard = () => {
           <div className="xl:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold">{t.actionRequired}</h3>
-              <span className="text-[10px] font-medium text-primary bg-primary/8 rounded-md px-2 py-0.5">{actionableRecs.length} {t.recommendations}</span>
+              <span className="text-xs font-medium text-primary bg-primary/8 rounded-md px-2 py-0.5">{actionableRecs.length} {t.recommendations}</span>
             </div>
             {actionableRecs.map((p) => (
               <RecommendationCard
@@ -198,12 +198,12 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{alert.providerName}</span>
-                      <span className="text-[10px] text-muted-foreground">{alert.type}</span>
+                      <span className="text-xs text-muted-foreground">{alert.type}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{alert.description}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    <span className="text-[10px] text-muted-foreground">{alert.triggerDate}</span>
+                    <span className="text-xs text-muted-foreground">{alert.triggerDate}</span>
                     {action.includes("overage") && billingUrl && (
                       <Button size="sm" variant="outline" asChild>
                         <a href={billingUrl} target="_blank" rel="noreferrer">{t.alertViewSubscription}</a>

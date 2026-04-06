@@ -50,7 +50,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </button>
                 ))}
               </div>
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}>
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 px-2 text-xs">

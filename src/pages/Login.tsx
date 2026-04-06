@@ -51,6 +51,7 @@ const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="email">{t.authEmail}</Label>
               <Input
+                className="h-11 text-base"
                 id="email"
                 type="email"
                 autoComplete="email"
@@ -63,6 +64,7 @@ const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="password">{t.authPassword}</Label>
               <Input
+                className="h-11 text-base"
                 id="password"
                 type="password"
                 autoComplete="current-password"

@@ -32,7 +32,7 @@ export function UsageProgressBar({ value, label, showPercent = true, size = "md"
         <div className="flex items-baseline justify-between gap-2">
           <div className="flex items-baseline gap-1.5 min-w-0">
             {label && <span className="text-xs text-muted-foreground truncate">{label}</span>}
-            {sublabel && <span className="text-[10px] text-muted-foreground/60">{sublabel}</span>}
+            {sublabel && <span className="text-xs text-muted-foreground/60">{sublabel}</span>}
           </div>
           {showPercent && (
             <span className={cn("text-xs font-bold tabular-nums shrink-0", getTextColor(value))}>
