@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:8080",
         "https://ai-finops.lovable.app",
+        "https://ai-finops.duckdns.org",
         "https://ai-finops-api.duckdns.org",
     ]
 
