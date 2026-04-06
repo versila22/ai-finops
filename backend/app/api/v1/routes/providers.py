@@ -71,14 +71,7 @@ def update_provider(
     return ProviderResponse.model_validate(provider)
 
 
-@router.post("/sync")
-@limiter.limit("5/minute")
-async def sync_all(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Trigger sync for all auto-sync providers (OpenAI, ElevenLabs)."""
+async def _run_sync_all(db: Session):
     results = await sync_all_providers(db)
     providers = db.query(Provider).all()
     return {
@@ -87,13 +80,19 @@ async def sync_all(
     }
 
 
-@router.post("/providers/{provider_id}/sync")
-async def sync_provider(
-    provider_id: str,
+@router.post("/sync")
+@router.post("/sync/all")
+@limiter.limit("5/minute")
+async def sync_all(
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Trigger sync for a specific provider."""
+    """Trigger sync for all auto-sync providers."""
+    return await _run_sync_all(db)
+
+
+async def _run_sync_provider(provider_id: str, db: Session):
     provider = db.query(Provider).filter_by(id=provider_id).first()
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
@@ -104,3 +103,14 @@ async def sync_provider(
         "sync_result": result,
         "provider": ProviderResponse.model_validate(provider).model_dump(by_alias=True),
     }
+
+
+@router.post("/providers/{provider_id}/sync")
+@router.post("/sync/{provider_id}")
+async def sync_provider(
+    provider_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger sync for a specific provider."""
+    return await _run_sync_provider(provider_id, db)

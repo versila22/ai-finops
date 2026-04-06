@@ -9,3 +9,5 @@ python-jose[cryptography]
 passlib[bcrypt]
 slowapi
 email-validator
+pytest
+pytest-asyncio

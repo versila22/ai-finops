@@ -20,6 +20,7 @@ from app.models.plan import Plan
 from app.models.user import User
 from app.schemas.dashboard import AlertResponse, ManualAdjustmentResponse, PlanResponse
 from app.seed.seed_data import seed
+from app.services.notification_service import check_and_notify_alerts
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ async def _background_sync():
         db = SessionLocal()
         try:
             results = await sync_all_providers(db)
+            check_and_notify_alerts(db)
             logger.info(f"Background startup sync results: {results}")
         finally:
             db.close()

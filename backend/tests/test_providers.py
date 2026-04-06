@@ -75,7 +75,7 @@ async def test_update_provider_not_found(auth_client, seeded_db):
 
 
 @pytest.mark.asyncio
-async def test_sync_all_success(auth_client, seeded_db, monkeypatch):
+async def test_sync_all_success_new_endpoint(auth_client, seeded_db, monkeypatch):
     async def fake_sync_all_providers(db):
         provider = db.query(Provider).filter_by(id="openai").first()
         provider.sync_status = "synced"
@@ -84,7 +84,7 @@ async def test_sync_all_success(auth_client, seeded_db, monkeypatch):
 
     monkeypatch.setattr("app.api.v1.routes.providers.sync_all_providers", fake_sync_all_providers)
 
-    response = await auth_client.post("/api/v1/sync")
+    response = await auth_client.post("/api/v1/sync/all")
 
     assert response.status_code == 200
     body = response.json()
@@ -93,7 +93,7 @@ async def test_sync_all_success(auth_client, seeded_db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_sync_provider_success(auth_client, seeded_db, monkeypatch):
+async def test_sync_provider_success_new_endpoint(auth_client, seeded_db, monkeypatch):
     async def fake_sync_provider_by_id(provider_id, db):
         provider = db.query(Provider).filter_by(id=provider_id).first()
         provider.sync_status = "synced"
@@ -102,7 +102,7 @@ async def test_sync_provider_success(auth_client, seeded_db, monkeypatch):
 
     monkeypatch.setattr("app.api.v1.routes.providers.sync_provider_by_id", fake_sync_provider_by_id)
 
-    response = await auth_client.post("/api/v1/providers/openai/sync")
+    response = await auth_client.post("/api/v1/sync/openai")
 
     assert response.status_code == 200
     body = response.json()
@@ -112,7 +112,7 @@ async def test_sync_provider_success(auth_client, seeded_db, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_sync_provider_not_found(auth_client, seeded_db):
-    response = await auth_client.post("/api/v1/providers/missing/sync")
+    response = await auth_client.post("/api/v1/sync/missing")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Provider not found"

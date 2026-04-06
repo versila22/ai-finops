@@ -72,23 +72,24 @@ async def test_login_invalid_payload_returns_422(client):
 
 @pytest.mark.asyncio
 async def test_protected_route_requires_token(client):
-    response = await client.get("/api/v1/health")
+    response = await client.get("/api/v1/dashboard")
 
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_protected_route_accepts_valid_token(auth_client, test_user):
-    response = await auth_client.get("/api/v1/health")
+    response = await auth_client.get("/api/v1/dashboard")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "0.1.0", "user": test_user.email}
+    data = response.json()
+    assert "kpis" in data  # dashboard returns KPIs when authenticated
 
 
 @pytest.mark.asyncio
 async def test_expired_token_is_rejected(client, expired_token):
     response = await client.get(
-        "/api/v1/health",
+        "/api/v1/dashboard",
         headers={"Authorization": f"Bearer {expired_token}"},
     )
 

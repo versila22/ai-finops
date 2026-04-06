@@ -1,5 +1,4 @@
 """Sync orchestrator — fetches live data from auto-sync providers and updates DB."""
-import asyncio
 import logging
 from datetime import datetime as dt
 from datetime import timezone
@@ -7,8 +6,9 @@ from datetime import timezone
 from sqlalchemy.orm import Session
 
 from app.models.provider import Provider
-from .openai_sync import fetch_openai_usage
+from app.services.notification_service import check_and_notify_alerts
 from .elevenlabs_sync import fetch_elevenlabs_usage
+from .openai_sync import fetch_openai_usage
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +44,9 @@ async def _sync_openai(db: Session) -> dict:
 
         if result.get("synced"):
             cost = result["total_cost_usd"]
-            # For pay-as-you-go: consumed = cost in USD, included_quota = soft limit
-            # We store cost directly as consumed; included_quota = 0 for variable plan
             provider.consumed = cost
-            provider.remaining = 0  # no fixed quota
+            provider.remaining = 0
             provider.included_quota = provider.included_quota or 0
-            # If no quota, usage_percent based on monthly_cost (budget)
             if provider.monthly_cost and provider.monthly_cost > 0:
                 provider.usage_percent = round((cost / provider.monthly_cost) * 100, 1)
             else:
@@ -68,11 +65,11 @@ async def _sync_openai(db: Session) -> dict:
             db.commit()
             logger.info(f"OpenAI synced: ${cost:.4f} this month ({provider.usage_percent:.1f}%)")
             return {"provider": "openai", "status": "synced", "cost_usd": cost}
-        else:
-            provider.sync_status = "error"
-            provider.last_sync = _now_iso()
-            db.commit()
-            return {"provider": "openai", "status": "error", "reason": "api_failed"}
+
+        provider.sync_status = "error"
+        provider.last_sync = _now_iso()
+        db.commit()
+        return {"provider": "openai", "status": "error", "reason": "api_failed"}
     except Exception as e:
         logger.error(f"OpenAI sync exception: {e}")
         try:
@@ -113,12 +110,10 @@ async def _sync_elevenlabs(db: Session) -> dict:
                 provider.usage_percent = 0
                 provider.overage = 0
 
-            # Update tier if provided
             tier = result.get("tier", "")
             if tier and tier != "unknown":
                 provider.plan = f"{tier.title()} Plan"
 
-            # Update next invoice date if available
             next_invoice = result.get("next_invoice_date_unix", 0)
             if next_invoice:
                 next_dt = dt.fromtimestamp(next_invoice, tz=timezone.utc)
@@ -148,11 +143,11 @@ async def _sync_elevenlabs(db: Session) -> dict:
                 "character_limit": char_limit,
                 "usage_percent": provider.usage_percent,
             }
-        else:
-            provider.sync_status = "error"
-            provider.last_sync = _now_iso()
-            db.commit()
-            return {"provider": "elevenlabs", "status": "error", "reason": "api_failed"}
+
+        provider.sync_status = "error"
+        provider.last_sync = _now_iso()
+        db.commit()
+        return {"provider": "elevenlabs", "status": "error", "reason": "api_failed"}
     except Exception as e:
         logger.error(f"ElevenLabs sync exception: {e}")
         try:
@@ -167,22 +162,25 @@ async def _sync_elevenlabs(db: Session) -> dict:
 
 
 async def sync_all_providers(db: Session) -> list[dict]:
-    """Sync all auto-sync providers in parallel. Errors are caught per-provider."""
+    """Sync all auto-sync providers sequentially, then evaluate alerts."""
     logger.info("Starting sync for all auto-sync providers...")
-    results = await asyncio.gather(
-        _sync_openai(db),
-        _sync_elevenlabs(db),
-        return_exceptions=False,
-    )
-    logger.info(f"Sync complete: {results}")
+    results = [
+        await _sync_openai(db),
+        await _sync_elevenlabs(db),
+    ]
+    new_alerts = check_and_notify_alerts(db)
+    logger.info(f"Sync complete: {results} | new alerts: {len(new_alerts)}")
     return list(results)
 
 
 async def sync_provider_by_id(provider_id: str, db: Session) -> dict:
-    """Sync a specific provider by ID."""
+    """Sync a specific provider by ID, then evaluate alerts."""
     if provider_id == "openai":
-        return await _sync_openai(db)
+        result = await _sync_openai(db)
     elif provider_id == "elevenlabs":
-        return await _sync_elevenlabs(db)
+        result = await _sync_elevenlabs(db)
     else:
         return {"provider": provider_id, "status": "skipped", "reason": "manual_provider"}
+
+    check_and_notify_alerts(db)
+    return result
